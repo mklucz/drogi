@@ -43,11 +43,11 @@ class WayListHandler(osmium.SimpleHandler):
         self.way_list = []
     
     def draw_walkways(self, way_list):
-        for e in way_list[:3]:
-            walkway_map = pyplot.figure()
-            subplot = walkway_map.add_subplot(111)
-            subplot.plot(e)
-            print(e)
+        walkway_map = pyplot.figure()
+        subplot = walkway_map.add_subplot(111)
+        for e in way_list[:2]:
+            subplot.plot(list(e.xy[0]), list(e.xy[1]))
+            print(list(zip(list(e.xy[0]), list(e.xy[1]))))
         pyplot.show()
 
     def way(self, w):
