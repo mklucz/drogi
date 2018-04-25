@@ -45,9 +45,9 @@ class WayListHandler(osmium.SimpleHandler):
     def draw_walkways(self, way_list):
         walkway_map = pyplot.figure()
         subplot = walkway_map.add_subplot(111)
-        for e in way_list[:2]:
-            subplot.plot(list(e.xy[0]), list(e.xy[1]))
-            print(list(zip(list(e.xy[0]), list(e.xy[1]))))
+        for e in way_list:
+            subplot.plot(list(e.xy[0]), list(e.xy[1]), color="blue")
+            # print(list(zip(list(e.xy[0]), list(e.xy[1]))))
         pyplot.show()
 
     def way(self, w):
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     # print(get_bounds(dzielnia))
     h = WayListHandler(dzielnia)
     h.apply_file(dzielnia, locations=True)
-    print("Zeroth element: ", type(h.way_list[0]))
+    # print("Zeroth element: ", type(h.way_list[0]))
     h.draw_walkways(h.way_list)
 
 # if __name__ == '__main__':
