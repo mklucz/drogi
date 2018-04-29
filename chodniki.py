@@ -34,6 +34,11 @@ def get_bounds(osm_xml_file):
         if "<bounds" in line:
             loaded_xml = xml.etree.ElementTree.fromstring(line)
             return loaded_xml.get("minlat"), loaded_xml.get("minlon"), loaded_xml.get("maxlat"), loaded_xml.get("maxlon")
+class WalkwayContainer:
+    def __init__(self, way, category):
+        self.way = way
+        self.category = category
+        self.line = wkblib.loads(wkb_factory.create_linestring(way), hex=True)
 
 class WayListHandler(osmium.SimpleHandler):
     def __init__(self, osm_file):
@@ -46,32 +51,36 @@ class WayListHandler(osmium.SimpleHandler):
         walkway_map = pyplot.figure()
         subplot = walkway_map.add_subplot(111)
         for e in way_list:
-            subplot.plot(list(e.xy[0]), list(e.xy[1]), color="blue")
-            # print(list(zip(list(e.xy[0]), list(e.xy[1]))))
+            if e.category == "walkway":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
+            elif e.category == "crossing":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="red")
+            elif e.category == "steps":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="green")
+
         pyplot.show()
 
     def way(self, w):
-        walkable_tags = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
-                        "residential", "crossing"]
+        walkable_tags = ["footway", "bridleway", "living_street", "pedestrian",
+                        "residential"]
         try:
-            if w.tags['highway'] in walkable_tags:
-                linestring = wkb_factory.create_linestring(w)
-                line = wkblib.loads(linestring, hex=True)
-                self.way_list.append(line)
+            tag = w.tags["highway"]
+            if tag in walkable_tags:
+                self.way_list.append(WalkwayContainer(w, "walkway"))
+            if tag == "crossing":
+                self.way_list.append(WalkwayContainer(w, "crossing"))
+                # linestring = wkb_factory.create_linestring(w)
+                # line = wkblib.loads(linestring, hex=True)
+                # self.way_list.append({"line":line, "category":"crossing"})                
+            if tag == "steps":
+                self.way_list.append(WalkwayContainer(w, "steps"))
+                # linestring = wkb_factory.create_linestring(w)
+                # line = wkblib.loads(linestring, hex=True)
+                # self.way_list.append({"line":line, "category":"steps"})
         except:
             pass
         
 if __name__ == '__main__':
-    # print(get_bounds(dzielnia))
     h = WayListHandler(dzielnia)
     h.apply_file(dzielnia, locations=True)
-    # print("Zeroth element: ", type(h.way_list[0]))
     h.draw_walkways(h.way_list)
-
-# if __name__ == '__main__':
-
-#     h = WalkwayCounterHandler()
-
-#     h.apply_file("map.osm", locations=True, idx='sparse_mem_array')
-
-#     print("Number of nodes: %d" % h.num_nodes)
