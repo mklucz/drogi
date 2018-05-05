@@ -2,8 +2,9 @@ import osmium
 import shapely.wkb as wkblib
 import xml.etree.ElementTree
 from matplotlib import pyplot, image
-from imageio import imwrite
-from numpy import ndarray
+# from imageio import imwrite
+# from numpy import ndarray
+import png
 
 class WalkwayCounterHandler(osmium.SimpleHandler):
     def __init__(self):
@@ -51,18 +52,17 @@ class WayListHandler(osmium.SimpleHandler):
     
     def draw_walkways(self, way_list):
         walkway_map = pyplot.figure(frameon=False)
-        
+        subplot = walkway_map.add_subplot(111)
         walkway_map.subplots_adjust(bottom = 0)
         walkway_map.subplots_adjust(top = 1)
         walkway_map.subplots_adjust(right = 1)
         walkway_map.subplots_adjust(left = 0)
-        subplot = walkway_map.add_subplot(111)
-        subplot.axis("off")
         subplot.set_xlim((self.minlon, self.maxlon))
         subplot.set_ylim((self.minlat, self.maxlat))
 
-
-
+        subplot.axis("off")
+        subplot.tick_params(axis='both', left='off', top='off', right='off', bottom='off', labelleft='off',
+                            labeltop='off', labelright='off', labelbottom='off')
         for e in way_list:
             if e.category == "walkway":
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
@@ -70,7 +70,8 @@ class WayListHandler(osmium.SimpleHandler):
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
             elif e.category == "steps":
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
-
+        pyplot.gca().xaxis.set_major_locator(pyplot.NullLocator())
+        pyplot.gca().yaxis.set_major_locator(pyplot.NullLocator())
         pyplot.savefig("savefig_test.png", dpi=300, bbox_inches="tight", pad_inches=0)
 
     def way(self, w):
@@ -91,3 +92,4 @@ if __name__ == '__main__':
     h = WayListHandler(dzielnia)
     h.apply_file(dzielnia, locations=True)
     h.draw_walkways(h.way_list)
+
