@@ -1,7 +1,9 @@
 import osmium
 import shapely.wkb as wkblib
 import xml.etree.ElementTree
-from matplotlib import pyplot
+from matplotlib import pyplot, image
+from imageio import imwrite
+from numpy import ndarray
 
 class WalkwayCounterHandler(osmium.SimpleHandler):
     def __init__(self):
@@ -44,21 +46,32 @@ class WayListHandler(osmium.SimpleHandler):
     def __init__(self, osm_file):
         osmium.SimpleHandler.__init__(self)
         self.osm_file = osm_file
-        minlat, minlon, maxlat, maxlon = get_bounds(osm_file)
+        self.minlat, self.minlon, self.maxlat, self.maxlon = [float(e) for e in get_bounds(osm_file)]
         self.way_list = []
     
     def draw_walkways(self, way_list):
-        walkway_map = pyplot.figure()
+        walkway_map = pyplot.figure(frameon=False)
+        
+        walkway_map.subplots_adjust(bottom = 0)
+        walkway_map.subplots_adjust(top = 1)
+        walkway_map.subplots_adjust(right = 1)
+        walkway_map.subplots_adjust(left = 0)
         subplot = walkway_map.add_subplot(111)
+        subplot.axis("off")
+        subplot.set_xlim((self.minlon, self.maxlon))
+        subplot.set_ylim((self.minlat, self.maxlat))
+
+
+
         for e in way_list:
             if e.category == "walkway":
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
             elif e.category == "crossing":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="red")
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
             elif e.category == "steps":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="green")
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
 
-        pyplot.show()
+        pyplot.savefig("savefig_test.png", dpi=300, bbox_inches="tight", pad_inches=0)
 
     def way(self, w):
         walkable_tags = ["footway", "bridleway", "living_street", "pedestrian",
@@ -68,15 +81,9 @@ class WayListHandler(osmium.SimpleHandler):
             if tag in walkable_tags:
                 self.way_list.append(WalkwayContainer(w, "walkway"))
             if tag == "crossing":
-                self.way_list.append(WalkwayContainer(w, "crossing"))
-                # linestring = wkb_factory.create_linestring(w)
-                # line = wkblib.loads(linestring, hex=True)
-                # self.way_list.append({"line":line, "category":"crossing"})                
+                self.way_list.append(WalkwayContainer(w, "crossing"))              
             if tag == "steps":
                 self.way_list.append(WalkwayContainer(w, "steps"))
-                # linestring = wkb_factory.create_linestring(w)
-                # line = wkblib.loads(linestring, hex=True)
-                # self.way_list.append({"line":line, "category":"steps"})
         except:
             pass
         
