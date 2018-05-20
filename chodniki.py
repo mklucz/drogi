@@ -1,7 +1,7 @@
 import osmium
 import shapely.wkb as wkblib
 import xml.etree.ElementTree
-from matplotlib import pyplot, image
+import matplotlib.pyplot as plt
 # from imageio import imwrite
 # from numpy import ndarray
 import png
@@ -51,7 +51,7 @@ class WayListHandler(osmium.SimpleHandler):
         self.way_list = []
     
     def draw_walkways(self, way_list):
-        walkway_map = pyplot.figure(frameon=False)
+        walkway_map = plt.figure(frameon=False)
         subplot = walkway_map.add_subplot(111)
         walkway_map.subplots_adjust(bottom = 0)
         walkway_map.subplots_adjust(top = 1)
@@ -70,9 +70,9 @@ class WayListHandler(osmium.SimpleHandler):
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
             elif e.category == "steps":
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
-        pyplot.gca().xaxis.set_major_locator(pyplot.NullLocator())
-        pyplot.gca().yaxis.set_major_locator(pyplot.NullLocator())
-        pyplot.savefig("savefig_test.png", dpi=300, bbox_inches="tight", pad_inches=0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        plt.savefig("savefig_test.png", dpi=300, bbox_inches="tight", pad_inches=0)
 
     def way(self, w):
         walkable_tags = ["footway", "bridleway", "living_street", "pedestrian",
@@ -88,8 +88,8 @@ class WayListHandler(osmium.SimpleHandler):
         except:
             pass
         
-if __name__ == '__main__':
-    h = WayListHandler(dzielnia)
-    h.apply_file(dzielnia, locations=True)
-    h.draw_walkways(h.way_list)
+# if __name__ == '__main__':
+#     h = WayListHandler(dzielnia)
+#     h.apply_file(dzielnia, locations=True)
+#     h.draw_walkways(h.way_list)
 
