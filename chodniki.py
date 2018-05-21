@@ -2,33 +2,11 @@ import osmium
 import shapely.wkb as wkblib
 import xml.etree.ElementTree
 import matplotlib.pyplot as plt
-# from imageio import imwrite
-# from numpy import ndarray
 import png
+from skimage import feature
 
-class WalkwayCounterHandler(osmium.SimpleHandler):
-    def __init__(self):
-        osmium.SimpleHandler.__init__(self)
-        self.num_nodes = 0
-    
-    def count_walkway(self, tags):
-        walkable_tags = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
-                        "residential", "crossing"]
-        try:
-            if tags['highway'] in walkable_tags:
-                self.num_nodes += 1
-        except:
-            pass
-
-    def node(self, n):
-        self.count_walkway(n.tags)
-
-    def way(self, w):
-        self.count_walkway(w.tags)
-
-    def relation(self, r):
-        self.count_walkway(r.tags)
-
+walkable_tags = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
+                "residential", "crossing"]
 wkb_factory = osmium.geom.WKBFactory()
 dzielnia = "map.osm"
 
@@ -37,6 +15,7 @@ def get_bounds(osm_xml_file):
         if "<bounds" in line:
             loaded_xml = xml.etree.ElementTree.fromstring(line)
             return loaded_xml.get("minlat"), loaded_xml.get("minlon"), loaded_xml.get("maxlat"), loaded_xml.get("maxlon")
+
 class WalkwayContainer:
     def __init__(self, way, category):
         self.way = way
@@ -56,7 +35,7 @@ class WayListHandler(osmium.SimpleHandler):
         walkway_map.subplots_adjust(bottom = 0)
         walkway_map.subplots_adjust(top = 1)
         walkway_map.subplots_adjust(right = 1)
-        walkway_map.subplots_adjust(left = 0)
+        walkway_map.subplots_adjundarrayst(left = 0)
         subplot.set_xlim((self.minlon, self.maxlon))
         subplot.set_ylim((self.minlat, self.maxlat))
 
@@ -87,8 +66,20 @@ class WayListHandler(osmium.SimpleHandler):
                 self.way_list.append(WalkwayContainer(w, "steps"))
         except:
             pass
-        
-# if __name__ == '__main__':
+
+class MapProcessor:
+    def __init__(self, map_file):
+        self.map_file = map_file
+        reader_object = png.Reader(map_file)
+        size_x, size_y, contents_iterator, image_attributes = reader_object.read()
+
+        for row in contents_iterator:
+            pass
+
+
+
+if __name__ == '__main__':
+    MapProcessor("littleH.png")
 #     h = WayListHandler(dzielnia)
 #     h.apply_file(dzielnia, locations=True)
 #     h.draw_walkways(h.way_list)
