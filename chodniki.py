@@ -8,7 +8,7 @@ from skimage import feature
 walkable_tags = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
                 "residential", "crossing"]
 wkb_factory = osmium.geom.WKBFactory()
-dzielnia = "map.osm"
+mapka = "map.osm"
 
 def get_bounds(osm_xml_file):
     for line in open(osm_xml_file):
@@ -35,7 +35,7 @@ class WayListHandler(osmium.SimpleHandler):
         walkway_map.subplots_adjust(bottom = 0)
         walkway_map.subplots_adjust(top = 1)
         walkway_map.subplots_adjust(right = 1)
-        walkway_map.subplots_adjundarrayst(left = 0)
+        walkway_map.subplots_adjust(left = 0)
         subplot.set_xlim((self.minlon, self.maxlon))
         subplot.set_ylim((self.minlat, self.maxlat))
 
@@ -51,7 +51,7 @@ class WayListHandler(osmium.SimpleHandler):
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        plt.savefig("savefig_test.png", dpi=300, bbox_inches="tight", pad_inches=0)
+        plt.savefig("rendered_walkways.png", dpi=300, bbox_inches="tight", pad_inches=0)
 
     def way(self, w):
         walkable_tags = ["footway", "bridleway", "living_street", "pedestrian",
@@ -89,9 +89,9 @@ class MapProcessor:
 
 
 if __name__ == '__main__':
-    MapProcessor("littleH.png", {"walkable": {(0, 0, 0, 255) : 1},
-                               "unwalkable": {(255, 255, 255, 255) : 0}})
-#     h = WayListHandler(dzielnia)
-#     h.apply_file(dzielnia, locations=True)
-#     h.draw_walkways(h.way_list)
+    # MapProcessor("littleH.png", {"walkable": {(0, 0, 0, 255) : 1},
+    #                            "unwalkable": {(255, 255, 255, 255) : 0}})
+    h = WayListHandler(mapka)
+    h.apply_file(mapka, locations=True)
+    h.draw_walkways(h.way_list)
 
