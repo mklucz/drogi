@@ -68,18 +68,29 @@ class WayListHandler(osmium.SimpleHandler):
             pass
 
 class MapProcessor:
-    def __init__(self, map_file):
+    def __init__(self, map_file, map_colors):
         self.map_file = map_file
+        self.map_colors = map_colors
         reader_object = png.Reader(map_file)
         size_x, size_y, contents_iterator, image_attributes = reader_object.read()
-
+        lenght_of_pixel = image_attributes["planes"]
+        new_list = []
         for row in contents_iterator:
-            pass
+            new_list.append(list(zip(*[iter(row)]*lenght_of_pixel)))
+        for sublist in new_list:
+            for i in range(len(sublist)):
+                if sublist[i] in map_colors["walkable"]:
+                    sublist[i] = map_colors["walkable"][sublist[i]]
+                elif sublist[i] in map_colors["unwalkable"]:
+                    sublist[i] = 0
+        for line in new_list:
+            print(line)
 
 
 
 if __name__ == '__main__':
-    MapProcessor("littleH.png")
+    MapProcessor("littleH.png", {"walkable": {(0, 0, 0, 255) : 1},
+                               "unwalkable": {(255, 255, 255, 255) : 0}})
 #     h = WayListHandler(dzielnia)
 #     h.apply_file(dzielnia, locations=True)
 #     h.draw_walkways(h.way_list)
