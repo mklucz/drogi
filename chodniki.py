@@ -3,11 +3,13 @@ import shapely.wkb as wkblib
 import xml.etree.ElementTree
 import matplotlib.pyplot as plt
 import png
+import numpy as np
 from skimage import feature
 from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 from random import randint
+
 
 
 walkable_tags = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
@@ -76,6 +78,13 @@ class MapProcessor:
     def __init__(self, map_file, map_colors):
         self.map_file = map_file
         self.map_colors = map_colors
+        self.processed_map, self.image_attributes = MapProcessor.process_png_into_array(map_file, map_colors)
+   
+    def chunks(l, n):
+        """Yield successive n-sized chunks from l.
+        https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks"""
+        for i in range(0, len(l), n):
+            yield l[i:i + n]
 
     def process_png_into_array(map_file, map_colors):
         reader_object = png.Reader(map_file)
@@ -91,42 +100,67 @@ class MapProcessor:
                 elif sublist[i] in map_colors["unwalkable"]:
                     sublist[i] = 0
         image_attributes["map_colors"] = map_colors
-        return new_list, image_attributes #TODO: put this in an object like a civilized man
+        return new_list, image_attributes
 
 class Pathfinder:
     def __init__(self, processed_map):
         self.walkways_array = processed_map[0]
         self.image_attributes = processed_map[1]
 
-    def pick_random_spot(processed_map):
-        height, width = (processed_map[1]["size"])
+    def pick_random_spot(processed_map_object):
+        height, width = (processed_map_object.image_attributes["size"])
         while True:
             picked_x, picked_y = randint(0, height - 1), randint(0, width - 1)
             # print(picked_x, picked_y)
             # print(processed_map[0])
             # print(processed_map[0][picked_x])
-            if processed_map[0][picked_y][picked_x] > 0:
+            if processed_map_object.processed_map[picked_y][picked_x] > 0:
                 return picked_x, picked_y
 
 
-    def find_path(walkways_array):
-        # print(walkways_array)
-        grid = Grid(matrix=walkways_array[0])
+    def find_path_between_random_spots(processed_map_object):
+        print(processed_map_object)
+        grid = Grid(matrix=processed_map_object.processed_map)
         # starting_coords = 
-        start = grid.node(*Pathfinder.pick_random_spot(walkways_array))
-        end = grid.node(*Pathfinder.pick_random_spot(walkways_array))
+        start = grid.node(*Pathfinder.pick_random_spot(processed_map_object))
+        end = grid.node(*Pathfinder.pick_random_spot(processed_map_object))
 
         finder = AStarFinder(diagonal_movement=DiagonalMovement.always)
         path, runs = finder.find_path(start, end, grid)
 
         print('operations:', runs, 'path length:', len(path))
         print(grid.grid_str(path=path, start=start, end=end))
+        # print(runs)
+        return path
+
+    def draw_walked_path(processed_map_object):
+        path = Pathfinder.find_path_between_random_spots(processed_map_object)
+        array_to_return = np.zeros_like(processed_map_object.processed_map, dtype="B")
+        for step in path:
+            y, x = step[0], step[1]
+            array_to_return[x][y] = 1
+        return array_to_return
+
+    def render_array_as_png(path_array, filename):
+        f = open(filename, "wb")
+        size = (len(path_array[0]), len(path_array))
+        writer = png.Writer(*size, greyscale=True, bitdepth=1)
+        writer.write(f, path_array)
+        f.close()
 
 
+
+
+
+
+littleH = MapProcessor("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
+path_array = Pathfinder.draw_walked_path(littleH)
 
 if __name__ == '__main__':
-    # print(Pathfinder.find_path(MapProcessor.process_png_into_array("littleL.png", {"walkable": {(0, 0, 0) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})))
-    print(Pathfinder.find_path(MapProcessor.process_png_into_array("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})))
+    # print(Pathfinder.find_path_between_random_spots(([[[1] for i in range(10)] for j in range(10)], {"size": (10, 10)})))
+    # print(Pathfinder.find_path_between_random_spots(littleH))
+    Pathfinder.render_array_as_png(path_array, "pypng_test.png")
+    # print(Pathfinder.find_path_between_random_spots(MapProcessor.process_png_into_array("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})))
     # print(MapProcessor.process_png_into_array("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}}))
     # # h = WayListHandler(mapka)
     # h.apply_file(mapka, locations=True)
