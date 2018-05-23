@@ -37,7 +37,8 @@ class WayListHandler(osmium.SimpleHandler):
         self.way_list = []
     
     def draw_walkways(self, way_list):
-        walkway_map = plt.figure(frameon=False)
+        
+        walkway_map = plt.figure(frameon=False, facecolor="black")
         subplot = walkway_map.add_subplot(111)
         walkway_map.subplots_adjust(bottom = 0)
         walkway_map.subplots_adjust(top = 1)
@@ -51,14 +52,14 @@ class WayListHandler(osmium.SimpleHandler):
                             labeltop='off', labelright='off', labelbottom='off')
         for e in way_list:
             if e.category == "walkway":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
             elif e.category == "crossing":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
             elif e.category == "steps":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="blue")
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        plt.savefig("rendered_walkways.png", dpi=300, bbox_inches="tight", pad_inches=0)
+        plt.savefig("rendered_walkways01.png", dpi=200, bbox_inches="tight", pad_inches=0)
 
     def way(self, w):
         walkable_tags = ["footway", "bridleway", "living_street", "pedestrian",
@@ -119,7 +120,7 @@ class Pathfinder:
 
 
     def find_path_between_random_spots(processed_map_object):
-        print(processed_map_object)
+        # print(processed_map_object)
         grid = Grid(matrix=processed_map_object.processed_map)
         # starting_coords = 
         start = grid.node(*Pathfinder.pick_random_spot(processed_map_object))
@@ -129,7 +130,7 @@ class Pathfinder:
         path, runs = finder.find_path(start, end, grid)
 
         print('operations:', runs, 'path length:', len(path))
-        print(grid.grid_str(path=path, start=start, end=end))
+        # print(grid.grid_str(path=path, start=start, end=end))
         # print(runs)
         return path
 
@@ -144,7 +145,7 @@ class Pathfinder:
     def render_array_as_png(path_array, filename):
         f = open(filename, "wb")
         size = (len(path_array[0]), len(path_array))
-        writer = png.Writer(*size, greyscale=True, bitdepth=1)
+        writer = png.Writer(*size, greyscale=True, bitdepth=8)
         writer.write(f, path_array)
         f.close()
 
@@ -153,17 +154,29 @@ class Pathfinder:
 
 
 
-littleH = MapProcessor("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
-path_array = Pathfinder.draw_walked_path(littleH)
+# littleH = MapProcessor("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
+# path_array = Pathfinder.draw_walked_path(littleH)
+def paths_adder(processed_map_object):
+    holder_array = np.zeros_like(processed_map_object.processed_map, dtype="B")
+    for i in range(250):
+        print("path: ", i)
+        new_path = Pathfinder.draw_walked_path(processed_map_object)
+        np.add(holder_array, new_path, out=holder_array)
+    return holder_array
+    pass
 
 if __name__ == '__main__':
     # print(Pathfinder.find_path_between_random_spots(([[[1] for i in range(10)] for j in range(10)], {"size": (10, 10)})))
     # print(Pathfinder.find_path_between_random_spots(littleH))
-    Pathfinder.render_array_as_png(path_array, "pypng_test.png")
+    # Pathfinder.render_array_as_png(path_array, "pypng_test.png")
     # print(Pathfinder.find_path_between_random_spots(MapProcessor.process_png_into_array("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})))
     # print(MapProcessor.process_png_into_array("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}}))
-    # # h = WayListHandler(mapka)
+    
+    # h = WayListHandler(mapka)
     # h.apply_file(mapka, locations=True)
     # h.draw_walkways(h.way_list)
+    big_map = MapProcessor("rendered_walkways01.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
+    # big_path = Pathfinder.draw_walked_path(big_map)
+    Pathfinder.render_array_as_png(paths_adder(big_map), "adder_test255.png")
     pass
 
