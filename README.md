@@ -23,7 +23,7 @@ h.draw_walkways(h.way_list)
 ```
 ...will result in the following picture being created:
 
-![extracted walkways](rendered_walkways01_inverted.png)
+![extracted walkways](img/rendered_walkways01_inverted.png)
 
 
 
@@ -44,5 +44,5 @@ Now what we need to do is represent this data in memory in an even more concise 
 
 What we're interested in, at least for the time being, is getting some idea about the area's walkable and unwalkable routes. Using the [pathfinding](https://github.com/brean/python-pathfinding) module to walk between a set of random points and summing the resulting paths we get this, here overlaid on the original map:
 
-![rendered paths](255_overlaid.png)
+![rendered paths](img/255_overlaid.png)
 
