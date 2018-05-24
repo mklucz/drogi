@@ -10,24 +10,82 @@ from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 from random import randint
 
+WALKABLE_TAGS = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
+                 "residential", "crossing"]
+WALKABLE_TAGS_FLAT = ["footway", "bridleway", "living_street", "pedestrian",
+                      "residential"]
+WKB_FACTORY = osmium.geom.WKBFactory()
 
-
-walkable_tags = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
-                "residential", "crossing"]
-wkb_factory = osmium.geom.WKBFactory()
 mapka = "map.osm"
-
-def get_bounds(osm_xml_file):
-    for line in open(osm_xml_file):
-        if "<bounds" in line:
-            loaded_xml = xml.etree.ElementTree.fromstring(line)
-            return loaded_xml.get("minlat"), loaded_xml.get("minlon"), loaded_xml.get("maxlat"), loaded_xml.get("maxlon")
 
 class WalkwayContainer:
     def __init__(self, way, category):
         self.way = way
         self.category = category
-        self.line = wkblib.loads(wkb_factory.create_linestring(way), hex=True)
+        self.line = wkblib.loads(WKB_FACTORY.create_linestring(way), hex=True)
+
+class OSMProcessor(osmium.SimpleHandler):
+    """Handler for .osm files"""
+    def __init__(self, osm_file):
+        osmium.SimpleHandler.__init__(self)
+        self.osm_file = osm_file
+        self.minlat, self.minlon, self.maxlat, self.maxlon = [float(e) for e in self.get_bounds(osm_file)]
+        self.way_list = []
+
+    def get_bounds(self, osm_file):
+        for line in open(osm_file):
+            if "<bounds" in line:
+                loaded_xml = xml.etree.ElementTree.fromstring(line)
+                return loaded_xml.get("minlat"), loaded_xml.get("minlon"), loaded_xml.get("maxlat"), loaded_xml.get("maxlon")
+    
+    def way(self, w):
+        try:
+            tag = w.tags["highway"]
+            if tag in WALKABLE_TAGS_FLAT:
+                self.way_list.append(WalkwayContainer(w, "walkway"))
+            if tag == "crossing":
+                self.way_list.append(WalkwayContainer(w, "crossing"))              
+            if tag == "steps":
+                self.way_list.append(WalkwayContainer(w, "steps"))
+        except:
+            pass
+
+class Illustrator:
+    def __init__(self, processed_osm, filename_to_save_with):
+        self.processed_osm = processed_osm
+        self.filename_to_save_with = filename_to_save_with
+
+    def draw_walkways(self, filename_to_save_with):
+        way_list = self.way_list
+        walkway_map = plt.figure(frameon=False)
+        subplot = walkway_map.add_subplot(111)
+        walkway_map.subplots_adjust(bottom = 0)
+        walkway_map.subplots_adjust(top = 1)
+        walkway_map.subplots_adjust(right = 1)
+        walkway_map.subplots_adjust(left = 0)
+        subplot.set_xlim((self.minlon, self.maxlon))
+        subplot.set_ylim((self.minlat, self.maxlat))
+        subplot.axis("off")
+        subplot.tick_params(axis='both', left='off', top='off', right='off', bottom='off', labelleft='off',
+                            labeltop='off', labelright='off', labelbottom='off')
+        for e in way_list:
+            if e.category == "walkway":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
+            elif e.category == "crossing":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
+            elif e.category == "steps":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        plt.savefig(filename_to_save_with, dpi=200, bbox_inches="tight", pad_inches=0)
+
+
+# def get_bounds(osm_xml_file):
+#     for line in open(osm_xml_file):
+#         if "<bounds" in line:
+#             loaded_xml = xml.etree.ElementTree.fromstring(line)
+#             return loaded_xml.get("minlat"), loaded_xml.get("minlon"), loaded_xml.get("maxlat"), loaded_xml.get("maxlon")
+
 
 class WayListHandler(osmium.SimpleHandler):
     def __init__(self, osm_file):
@@ -38,7 +96,7 @@ class WayListHandler(osmium.SimpleHandler):
     
     def draw_walkways(self, way_list):
         
-        walkway_map = plt.figure(frameon=False, facecolor="black")
+        walkway_map = plt.figure(frameon=False)
         subplot = walkway_map.add_subplot(111)
         walkway_map.subplots_adjust(bottom = 0)
         walkway_map.subplots_adjust(top = 1)
@@ -46,7 +104,6 @@ class WayListHandler(osmium.SimpleHandler):
         walkway_map.subplots_adjust(left = 0)
         subplot.set_xlim((self.minlon, self.maxlon))
         subplot.set_ylim((self.minlat, self.maxlat))
-
         subplot.axis("off")
         subplot.tick_params(axis='both', left='off', top='off', right='off', bottom='off', labelleft='off',
                             labeltop='off', labelright='off', labelbottom='off')
@@ -62,11 +119,11 @@ class WayListHandler(osmium.SimpleHandler):
         plt.savefig("rendered_walkways01.png", dpi=200, bbox_inches="tight", pad_inches=0)
 
     def way(self, w):
-        walkable_tags = ["footway", "bridleway", "living_street", "pedestrian",
-                        "residential"]
+        # WALKABLE_TAGS = ["footway", "bridleway", "living_street", "pedestrian",
+        #                 "residential"]
         try:
             tag = w.tags["highway"]
-            if tag in walkable_tags:
+            if tag in WALKABLE_TAGS_FLAT:
                 self.way_list.append(WalkwayContainer(w, "walkway"))
             if tag == "crossing":
                 self.way_list.append(WalkwayContainer(w, "crossing"))              
@@ -166,17 +223,16 @@ def paths_adder(processed_map_object):
     pass
 
 if __name__ == '__main__':
-    # print(Pathfinder.find_path_between_random_spots(([[[1] for i in range(10)] for j in range(10)], {"size": (10, 10)})))
-    # print(Pathfinder.find_path_between_random_spots(littleH))
-    # Pathfinder.render_array_as_png(path_array, "pypng_test.png")
-    # print(Pathfinder.find_path_between_random_spots(MapProcessor.process_png_into_array("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})))
-    # print(MapProcessor.process_png_into_array("littleH.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}}))
-    
+    a = OSMProcessor(mapka)
+    a.apply_file(mapka, locations=True)
+    # print(dir(a))
+    # print(a.way_list[0:10])
+    Illustrator.draw_walkways(a, "Illustrator.png")
     # h = WayListHandler(mapka)
     # h.apply_file(mapka, locations=True)
     # h.draw_walkways(h.way_list)
-    big_map = MapProcessor("rendered_walkways01.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
+    # big_map = MapProcessor("rendered_walkways01.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
     # big_path = Pathfinder.draw_walked_path(big_map)
-    Pathfinder.render_array_as_png(paths_adder(big_map), "adder_test255.png")
+    # Pathfinder.render_array_as_png(paths_adder(big_map), "adder_test255.png")
     pass
 
