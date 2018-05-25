@@ -9,12 +9,14 @@ from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 from random import randint
+from pympler import asizeof
 
 WALKABLE_TAGS = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
                  "residential", "crossing"]
 WALKABLE_TAGS_FLAT = ["footway", "bridleway", "living_street", "pedestrian",
                       "residential"]
 WKB_FACTORY = osmium.geom.WKBFactory()
+MAP_COLORS = {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}}
 
 mapka = "map.osm"
 
@@ -70,16 +72,42 @@ class Illustrator:
                             labeltop='off', labelright='off', labelbottom='off')
         for e in way_list:
             if e.category == "walkway":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
             elif e.category == "crossing":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
             elif e.category == "steps":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=1.0)
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.savefig(filename_to_save_with, dpi=200, bbox_inches="tight", pad_inches=0)
 
+class ArrayMaker:
+    def __init__(self, map_file, map_colors):
+        self.map_file = map_file
+        self.map_colors = map_colors
+        self.processed_map, self.image_attributes = MapProcessor.process_png_into_array(map_file, map_colors)
+    
+    def process_png_into_array(map_file, map_colors):
+        reader_object = png.Reader(map_file)
+        size_x, size_y, contents_iterator, image_attributes = reader_object.read()
+        lenght_of_pixel = image_attributes["planes"]
+        new_list = []
+        for row in contents_iterator:
+            new_list.append(list(zip(*[iter(row)]*lenght_of_pixel)))
 
+            # new_list.append(np.asarray(list(zip(*[iter(row)]*lenght_of_pixel)), dtype="B"))
+        # new_list = np.asarray(new_list, dtype="B")
+        for sublist in new_list:
+            for i in range(len(sublist)):
+                # print(sublist[i].size)
+                if sublist[i] in map_colors["walkable"]:
+                    sublist[i] = map_colors["walkable"][sublist[i]]
+                elif sublist[i] in map_colors["unwalkable"]:
+                    sublist[i] = 0
+            sublist = tuple(sublist)
+        new_list = np.asarray(new_list, dtype="B")    
+        image_attributes["map_colors"] = map_colors
+        return new_list, image_attributes
 # def get_bounds(osm_xml_file):
 #     for line in open(osm_xml_file):
 #         if "<bounds" in line:
@@ -151,12 +179,13 @@ class MapProcessor:
         new_list = []
         for row in contents_iterator:
             new_list.append(list(zip(*[iter(row)]*lenght_of_pixel)))
-        for sublist in new_list:
-            for i in range(len(sublist)):
-                if sublist[i] in map_colors["walkable"]:
-                    sublist[i] = map_colors["walkable"][sublist[i]]
-                elif sublist[i] in map_colors["unwalkable"]:
-                    sublist[i] = 0
+        for i, sublist in enumerate(new_list):
+            for j, value in enumerate(sublist):
+                if value in map_colors["walkable"]:
+                    sublist[j] = map_colors["walkable"][value]
+                elif value in map_colors["unwalkable"]:
+                    sublist[j] = 0
+            new_list[i] = tuple(sublist)
         image_attributes["map_colors"] = map_colors
         return new_list, image_attributes
 
@@ -223,11 +252,18 @@ def paths_adder(processed_map_object):
     pass
 
 if __name__ == '__main__':
-    a = OSMProcessor(mapka)
-    a.apply_file(mapka, locations=True)
-    # print(dir(a))
-    # print(a.way_list[0:10])
-    Illustrator.draw_walkways(a, "Illustrator.png")
+    # a = OSMProcessor(mapka)
+    # a.apply_file(mapka, locations=True)
+    # Illustrator.draw_walkways(a, "Illustrator3.png")
+    b = ArrayMaker.process_png_into_array("Illustrator3.png", MAP_COLORS)
+    print(type(b[0]))
+    print(b[0].shape)
+    print(asizeof.asizeof(b[0]))
+    c = MapProcessor.process_png_into_array("Illustrator3.png", MAP_COLORS)
+    print(type(c[0]))
+    print((len(c[0]), len(c[0][0])))
+    print(asizeof.asizeof(c[0]))
+
     # h = WayListHandler(mapka)
     # h.apply_file(mapka, locations=True)
     # h.draw_walkways(h.way_list)
