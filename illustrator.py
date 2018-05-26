@@ -40,9 +40,9 @@ class Illustrator:
             array_to_return[x][y] = 1
         return array_to_return
 
-    def render_array_as_png(path_array, filename):
+    def render_array_as_png(path_array, filename, bitdepth):
         f = open(filename, "wb")
         size = (len(path_array[0]), len(path_array))
-        writer = png.Writer(*size, greyscale=True, bitdepth=2)
+        writer = png.Writer(*size, greyscale=True, bitdepth=bitdepth)
         writer.write(f, path_array)
         f.close()

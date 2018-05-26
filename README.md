@@ -2,7 +2,7 @@
 
 ## What is this thing?
 
-What I'm aiming to accomplish here is building a tool that'll allow for a quick and straightforward way to tell how a given area's walkability could be improved. In other words: given a map of walkways, where does one add a connection or a set of connections for the greatest improvement in average travel times. Or, still in other words, where to build a sidewalk to get the most bang for your buck.
+What I'm aiming to accomplish here is building a tool for analysing city maps in terms of walkability, driveability, bikeability and so on. Its intended ultimate purpose is generating large amounts of data.
 
 All in the spirit of new urbanism and reducing car dependancy, concepts about which you can read in other places on the web, should you feel so inclined.
 
@@ -17,9 +17,9 @@ Thankfully this part is pretty straightforward. At [GeoFabrik GmbH's site](https
 The file contatining the extract is the map.osm and we're processing it using WayListHandler class. The following calls...
 
 ```python
-h = WayListHandler("map.osm")
-h.apply_file("map.osm", locations=True)
-h.draw_walkways(h.way_list)
+a = OSMProcessor("map.osm")
+a.apply_file("map.osm", locations=True)
+Illustrator.draw_walkways(a, "walkways.png")
 ```
 ...will result in the following picture being created:
 
@@ -42,7 +42,14 @@ Now what we need to do is represent this data in memory in an even more concise 
 
 #### Finding paths
 
-What we're interested in, at least for the time being, is getting some idea about the area's walkable and unwalkable routes. Using the [pathfinding](https://github.com/brean/python-pathfinding) module to walk between a set of random points and summing the resulting paths we get this, here overlaid on the original map:
+What we're interested in, at least for the time being, is getting some idea about the area's walkable and unwalkable routes. Using the [pathfinding](https://github.com/brean/python-pathfinding) module to walk between a set of random points and summing the resulting paths as so...
+
+```python
+b = MapArray("Illustrator4.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
+Illustrator.render_array_as_png(paths_adder(b, 255), "illustrator_test.png", 8)
+```
+
+...we get this, here overlaid on the original map and equalized:
 
 ![rendered paths](img/255_overlaid.png)
 

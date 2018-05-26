@@ -2,10 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import png
 from skimage import feature
-
-
 from pympler import asizeof
-
 from osmprocessor import *
 from illustrator import Illustrator
 from pathfinder import Pathfinder
@@ -111,9 +108,9 @@ class MapProcessor:
         image_attributes["map_colors"] = map_colors
         return new_list, image_attributes
 
-def paths_adder(processed_map_object):
+def paths_adder(processed_map_object, num_of_paths):
     holder_array = np.zeros_like(processed_map_object.array, dtype="B")
-    for i in range(4):
+    for i in range(num_of_paths):
         print("path: ", i)
         new_path = Illustrator.draw_walked_path(processed_map_object)
         np.add(holder_array, new_path, out=holder_array)
@@ -129,7 +126,7 @@ if __name__ == '__main__':
 
     b = MapArray("Illustrator4.png", MAP_COLORS)
     print(type(b))
-    Illustrator.render_array_as_png(paths_adder(b), "illustrator_test.png")
+    Illustrator.render_array_as_png(paths_adder(b, 4), "illustrator_test2.png", 2)
     # print(type(b[0]))
     # print(b[0].shape)
     # print(asizeof.asizeof(b[0]))
