@@ -17,7 +17,7 @@ Thankfully this part is pretty straightforward. At [GeoFabrik GmbH's site](https
 The file contatining the extract is the map.osm and we're processing it using WayListHandler class. The following calls...
 
 ```python
-a = OSMProcessor("map.osm")
+a = OSMHandler("map.osm")
 a.apply_file("map.osm", locations=True)
 Illustrator.draw_walkways(a, "walkways.png")
 ```
@@ -45,7 +45,7 @@ Now what we need to do is represent this data in memory in an even more concise 
 What we're interested in, at least for the time being, is getting some idea about the area's walkable and unwalkable routes. Using the [pathfinding](https://github.com/brean/python-pathfinding) module to walk between a set of random points and summing the resulting paths as so...
 
 ```python
-b = MapArray("Illustrator4.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
+b = WayMap("Illustrator4.png", {"walkable": {(0, 0, 0, 255) : 1}, "unwalkable": {(255, 255, 255, 255) : 0}})
 Illustrator.render_array_as_png(paths_adder(b, 255), "illustrator_test.png", 8)
 ```
 

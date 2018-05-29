@@ -10,12 +10,12 @@ class Illustrator:
 
     def draw_walkways(self, filename_to_save_with):
         way_list = self.way_list
-        walkway_map = plt.figure(frameon=False)
-        subplot = walkway_map.add_subplot(111)
-        walkway_map.subplots_adjust(bottom = 0)
-        walkway_map.subplots_adjust(top = 1)
-        walkway_map.subplots_adjust(right = 1)
-        walkway_map.subplots_adjust(left = 0)
+        fig = plt.figure(frameon=False)
+        subplot = fig.add_subplot(111)
+        fig.subplots_adjust(bottom = 0)
+        fig.subplots_adjust(top = 1)
+        fig.subplots_adjust(right = 1)
+        fig.subplots_adjust(left = 0)
         subplot.set_xlim((self.minlon, self.maxlon))
         subplot.set_ylim((self.minlat, self.maxlat))
         subplot.axis("off")
@@ -32,9 +32,9 @@ class Illustrator:
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.savefig(filename_to_save_with, dpi=200, bbox_inches="tight", pad_inches=0)
     
-    def draw_walked_path(processed_map_object):
-        path = Pathfinder.find_path_between_random_spots(processed_map_object)
-        array_to_return = np.zeros_like(processed_map_object.array, dtype="B")
+    def draw_walked_path(way_map, walking_function):
+        path = getattr(Pathfinder, walking_function)(way_map)
+        array_to_return = np.zeros_like(way_map.array, dtype="B")
         for step in path:
             y, x = step[0], step[1]
             array_to_return[x][y] = 1

@@ -15,7 +15,7 @@ class WalkwayContainer:
         self.category = category
         self.line = wkblib.loads(WKB_FACTORY.create_linestring(way), hex=True)
 
-class OSMProcessor(osmium.SimpleHandler):
+class OSMHandler(osmium.SimpleHandler):
     """Handler for .osm files"""
     def __init__(self, osm_file):
         osmium.SimpleHandler.__init__(self)
