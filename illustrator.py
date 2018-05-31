@@ -4,8 +4,8 @@ import png
 from pathfinder import Pathfinder
 
 class Illustrator:
-    def __init__(self, processed_osm, filename_to_save_with):
-        self.processed_osm = processed_osm
+    def __init__(self, way_map, filename_to_save_with):
+        self.way_map = way_map
         self.filename_to_save_with = filename_to_save_with
 
     def draw_walkways(self, filename_to_save_with):
@@ -46,3 +46,7 @@ class Illustrator:
         writer = png.Writer(*size, greyscale=True, bitdepth=bitdepth)
         writer.write(f, path_array)
         f.close()
+
+    def linestrings_to_graph(self):
+        print(len(self.way_map.way_list))
+        pass
