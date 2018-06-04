@@ -59,17 +59,36 @@ if __name__ == '__main__':
     lines = pickle.load(open("ogorek", "rb"))
     graph = {}
     multiline = shapely.ops.linemerge([e[0] for e in lines])
-    for e in multiline:
-        x = e.coords.xy[0]
-        y = e.coords.xy[1]
+    for singleline in multiline:
+        x = singleline.coords.xy[0]
+        y = singleline.coords.xy[1]
+        print(len(x))
         for i in range(len(x)):
             xy = (x[i], y[i])
             if i == 0:
-                graph[xy] = (x[i+1], y[i+1])
+                if xy not in graph:
+                    graph[xy] = [(x[i+1], y[i+1])]
+                else:
+                    graph[xy].append((x[i+1], y[i+1]))
+            elif i == len(x):
+                if xy not in graph:
+                    graph[xy] = [(x[i-1], y[i-1])]
+                else:
+                    graph[xy].append((x[i-1], y[i-1]))
+            elif 0 < i < len(x) - 1:
+                if xy not in graph:
+                    graph[xy] = [(x[i+1], y[i+1]), (x[i-1], y[i-1])]
+                    # graph[xy] = [(x[i-1], y[i-1])]
+                else:
+                    graph[xy].append((x[i+1], y[i+1]))
+                    graph[xy] = (x[i-1], y[i-1])
+        break
+    print(len(graph))
+    for k, v in graph.items():
+        print(k, v)
 
 
         
-        break
 
     # Illustrator.linestrings_to_graph(a)
     # Illustrator.draw_walkways(a, "Illustrator5.png")
