@@ -1,13 +1,17 @@
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 import png
 import pickle
+import random
 # import shapely
 
 from shapely.geometry import LineString
 # from skimage import feature
 # from pympler import asizeof
-from pathfinding.core.grid import Grid
+# from pathfinding.core.grid import Grid
+from networkx.algorithms.shortest_paths.astar import astar_path
+from networkx import Graph
+from networkx.exception import NetworkXNoPath
 
 from .osmhandler import *
 from .illustrator import Illustrator
@@ -20,30 +24,52 @@ class WayMap:
     def __init__(self, map_file, map_colors):
         self.map_file = map_file
         self.map_colors = map_colors
-        # self.array, self.image_attributes = WayMap.process_png_into_array(map_file, map_colors)
-        
-        # self.grid = Grid(matrix=self.array)
+
         self.handler = OSMHandler(self.map_file)
         self.handler.apply_file(self.map_file, locations=True)
-        self.graph = Graph(self.handler.way_list)
+        self.way_list = self.handler.way_list
+        self.graph = Graph(WayGraph(self.way_list))
 
-    def process_png_into_array(map_file, map_colors):
-        reader_object = png.Reader(map_file)
-        size_x, size_y, contents_iterator, image_attributes = reader_object.read()
-        lenght_of_pixel = image_attributes["planes"]
-        new_list = []
-        for row in contents_iterator:
-            new_list.append(list(zip(*[iter(row)] * lenght_of_pixel)))
-        for sublist in new_list:
-            for i in range(len(sublist)):
-                if sublist[i] in map_colors["walkable"]:
-                    sublist[i] = map_colors["walkable"][sublist[i]]
-                elif sublist[i] in map_colors["unwalkable"]:
-                    sublist[i] = 0
-            sublist = tuple(sublist)
-        new_list = np.asarray(new_list, dtype="B")
-        image_attributes["map_colors"] = map_colors
-        return new_list, image_attributes
+    def save_as_png(self, filename_to_save_with):
+        fig = plt.figure(frameon=False)
+        subplot = fig.add_subplot(111)
+        fig.subplots_adjust(bottom = 0)
+        fig.subplots_adjust(top = 1)
+        fig.subplots_adjust(right = 1)
+        fig.subplots_adjust(left = 0)
+        subplot.set_xlim((self.minlon, self.maxlon))
+        subplot.set_ylim((self.minlat, self.maxlat))
+        subplot.axis("off")
+        subplot.tick_params(axis='both', left='off', top='off', right='off', bottom='off', labelleft='off',
+                            labeltop='off', labelright='off', labelbottom='off')
+        for e in self.way_list:
+            if e.category == "walkway":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
+            elif e.category == "crossing":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
+            elif e.category == "steps":
+                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        plt.savefig(filename_to_save_with, dpi=200, bbox_inches="tight", pad_inches=0)
+
+    # def process_png_into_array(map_file, map_colors):
+    #     reader_object = png.Reader(map_file)
+    #     size_x, size_y, contents_iterator, image_attributes = reader_object.read()
+    #     lenght_of_pixel = image_attributes["planes"]
+    #     new_list = []
+    #     for row in contents_iterator:
+    #         new_list.append(list(zip(*[iter(row)] * lenght_of_pixel)))
+    #     for sublist in new_list:
+    #         for i in range(len(sublist)):
+    #             if sublist[i] in map_colors["walkable"]:
+    #                 sublist[i] = map_colors["walkable"][sublist[i]]
+    #             elif sublist[i] in map_colors["unwalkable"]:
+    #                 sublist[i] = 0
+    #         sublist = tuple(sublist)
+    #     new_list = np.asarray(new_list, dtype="B")
+    #     image_attributes["map_colors"] = map_colors
+    #     return new_list, image_attributes
 
 
 class WorkRun():
@@ -53,18 +79,44 @@ class WorkRun():
                  osm_file=None,
                  num_of_chunks=1,
                  chunk_size=None,
-                 num_of_trips=10,
+                 num_of_trips=1,
+                 origin_choice="random",
+                 destination_choice="random",
+                 allowed_means_of_transport="walking",
                  database=None):
         super(WorkRun, self).__init__()
         self.bounds = bounds
         self.osm_file = osm_file
         self.num_of_chunks = num_of_chunks
         self.chunk_size = chunk_size
+        self.num_of_trips = num_of_trips
+        self.origin_choice = origin_choice
+        self.destination_choice = destination_choice
+        self.allowed_means_of_transport = allowed_means_of_transport
         self.database = database
-        self.way_maps = []
 
-        for chunk in range(num_of_chunks):
-            new_way_map = WayMap(osm_file)
+        self.chunks = []
+
+        for i in range(num_of_chunks):
+            way_map = WayMap(self.osm_file, MAP_COLORS)
+            chunk = Chunk(way_map.way_list, trips=[], num_of_trips=self.num_of_trips)
+            points_list = list(way_map.graph)
+            if len(points_list) < 2:
+                raise ValueError("Not enough points on map")
+            # trips = []
+            for trip in range(self.num_of_trips):
+                start, end = random.sample(points_list, 2)
+                chunk.trips.append(Trip(way_map, start, end))
+            self.chunks.append(chunk)
+
+class Chunk(object):
+    """docstring for Chunk"""
+    def __init__(self, way_map, trips=[], num_of_trips=1):
+        super(Chunk, self).__init__()
+        self.way_map = way_map
+        self.trips = trips
+        self.num_of_trips = num_of_trips
+        
 
 class Trip():
     """docstring for Trip"""
@@ -73,19 +125,27 @@ class Trip():
         self.way_map = way_map
         self.start = start
         self.end = end
+        self.path = Path(self.way_map, self.start, self.end)
         
 
 class Path(LineString):
     """docstring for Path"""
-    def __init__(self, arg):
+    def __init__(self, way_map, start, end):
         super(Path, self).__init__()
-        self.arg = arg
+        self.way_map = way_map
+        self.start = start
+        self.end = end
+        try:
+            self.list_of_nodes = astar_path(self.way_map.graph, self.start, self.end)
+        except NetworkXNoPath:
+            self.list_of_nodes = []
+        self.linestring = LineString(self.list_of_nodes)
            
 
-class Graph(dict):
-    """docstring for Graph"""
+class WayGraph(dict):
+    """docstring for WayGraph"""
     def __init__(self, way_list):
-        super(Graph, self).__init__()
+        super(WayGraph, self).__init__()
         self.way_list = way_list
         for way in self.way_list:
             linestring = way.line
@@ -110,7 +170,6 @@ class Graph(dict):
                     else:
                         self[xy].append((x[i + 1], y[i + 1]))
                         self[xy].append((x[i - 1], y[i - 1]))
-            
 
 
 def paths_adder(way_map, num_of_paths, walking_function):
