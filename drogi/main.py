@@ -28,6 +28,10 @@ class WayMap:
         self.handler = OSMHandler(self.map_file)
         self.handler.apply_file(self.map_file, locations=True)
         self.way_list = self.handler.way_list
+        self.minlat = self.handler.minlat
+        self.minlon = self.handler.minlon
+        self.maxlat = self.handler.maxlat
+        self.maxlon = self.handler.maxlon
         self.graph = Graph(WayGraph(self.way_list))
 
     def save_as_png(self, filename_to_save_with):
@@ -40,8 +44,8 @@ class WayMap:
         subplot.set_xlim((self.minlon, self.maxlon))
         subplot.set_ylim((self.minlat, self.maxlat))
         subplot.axis("off")
-        subplot.tick_params(axis='both', left='off', top='off', right='off', bottom='off', labelleft='off',
-                            labeltop='off', labelright='off', labelbottom='off')
+        subplot.tick_params(axis='both', left=False, top=False, right=False, bottom=False, labelleft=False,
+                            labeltop=False, labelright=False, labelbottom=False)
         for e in self.way_list:
             if e.category == "walkway":
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
@@ -99,7 +103,7 @@ class WorkRun():
 
         for i in range(num_of_chunks):
             way_map = WayMap(self.osm_file, MAP_COLORS)
-            chunk = Chunk(way_map.way_list, trips=[], num_of_trips=self.num_of_trips)
+            chunk = Chunk(way_map, trips=[], num_of_trips=self.num_of_trips)
             points_list = list(way_map.graph)
             if len(points_list) < 2:
                 raise ValueError("Not enough points on map")
@@ -126,6 +130,10 @@ class Trip():
         self.start = start
         self.end = end
         self.path = Path(self.way_map, self.start, self.end)
+        if len(self.path) >= 2:
+            self.is_traversible = True
+        else:
+            self.is_traversible = False
         
 
 class Path(LineString):
@@ -140,6 +148,8 @@ class Path(LineString):
         except NetworkXNoPath:
             self.list_of_nodes = []
         self.linestring = LineString(self.list_of_nodes)
+    def __len__(self):
+        return len(self.list_of_nodes)
            
 
 class WayGraph(dict):
