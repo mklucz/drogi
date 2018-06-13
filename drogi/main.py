@@ -3,6 +3,7 @@ import numpy as np
 import png
 import pickle
 import random
+
 # import shapely
 
 from shapely.geometry import LineString
@@ -17,13 +18,10 @@ from .osmhandler import *
 from .illustrator import Illustrator
 from .pathfinder import Pathfinder
 
-MAP_COLORS = {"walkable": {(0, 0, 0, 255): 1}, "unwalkable": {(255, 255, 255, 255): 0}}
-
 
 class WayMap:
-    def __init__(self, map_file, map_colors):
+    def __init__(self, map_file):
         self.map_file = map_file
-        self.map_colors = map_colors
 
         self.handler = OSMHandler(self.map_file)
         self.handler.apply_file(self.map_file, locations=True)
@@ -32,10 +30,13 @@ class WayMap:
         self.minlon = self.handler.minlon
         self.maxlat = self.handler.maxlat
         self.maxlon = self.handler.maxlon
+        
         self.graph = Graph(WayGraph(self.way_list))
 
-    def save_as_png(self, filename_to_save_with):
-        fig = plt.figure(frameon=False)
+    def save_as_png(self, filename):
+        size = ((self.maxlon - self.minlon) * 400, (self.maxlat - self.minlat) * 400)
+        print(size)
+        fig = plt.figure(frameon=False, figsize=size)
         subplot = fig.add_subplot(111)
         fig.subplots_adjust(bottom = 0)
         fig.subplots_adjust(top = 1)
@@ -44,8 +45,8 @@ class WayMap:
         subplot.set_xlim((self.minlon, self.maxlon))
         subplot.set_ylim((self.minlat, self.maxlat))
         subplot.axis("off")
-        subplot.tick_params(axis='both', left=False, top=False, right=False, bottom=False, labelleft=False,
-                            labeltop=False, labelright=False, labelbottom=False)
+        subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False, labelleft=False,
+                            labeltop=False, labelright=False, labelbottom=False, length=0, width=0, pad=0)
         for e in self.way_list:
             if e.category == "walkway":
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
@@ -55,25 +56,16 @@ class WayMap:
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        plt.savefig(filename_to_save_with, dpi=200, bbox_inches="tight", pad_inches=0)
+        # plt.autoscale(tight=False, enable=False)
+        plt.savefig(filename, dpi=100, bbox_inches="tight", pad_inches=0)
 
-    # def process_png_into_array(map_file, map_colors):
-    #     reader_object = png.Reader(map_file)
-    #     size_x, size_y, contents_iterator, image_attributes = reader_object.read()
-    #     lenght_of_pixel = image_attributes["planes"]
-    #     new_list = []
-    #     for row in contents_iterator:
-    #         new_list.append(list(zip(*[iter(row)] * lenght_of_pixel)))
-    #     for sublist in new_list:
-    #         for i in range(len(sublist)):
-    #             if sublist[i] in map_colors["walkable"]:
-    #                 sublist[i] = map_colors["walkable"][sublist[i]]
-    #             elif sublist[i] in map_colors["unwalkable"]:
-    #                 sublist[i] = 0
-    #         sublist = tuple(sublist)
-    #     new_list = np.asarray(new_list, dtype="B")
-    #     image_attributes["map_colors"] = map_colors
-    #     return new_list, image_attributes
+    def save_part_as_png(self, filename, partial_bounds):
+        partial_minlon, partial_maxlon = partial_bounds[0], partial_bounds[1]
+        partial_minlat, partial_maxlat = partial_bounds[2], partial_bounds[3]
+        if (partial_minlon > self.minlon or partial_maxlon > self.maxlon or 
+            partial_minlat > self.minlat or partial_maxlat > self.maxlat):
+            raise ValueError("partial_bounds out of WayMap's bounds")
+
 
 
 class WorkRun():
@@ -102,7 +94,7 @@ class WorkRun():
         self.chunks = []
 
         for i in range(num_of_chunks):
-            way_map = WayMap(self.osm_file, MAP_COLORS)
+            way_map = WayMap(self.osm_file)
             chunk = Chunk(way_map, trips=[], num_of_trips=self.num_of_trips)
             points_list = list(way_map.graph)
             if len(points_list) < 2:
@@ -193,23 +185,5 @@ def paths_adder(way_map, num_of_paths, walking_function):
 
 
 if __name__ == '__main__':
-    
-
-    # a = OSMHandler(mapka)
-    # a.apply_file(mapka, locations=True)
-
-    # pickle.dump([[e.line, e.category] for e in a.way_list], open("ogorek", "wb"))
-
-    # lines = pickle.load(open("ogorek", "rb"))
-    # g = Graph(lines)
-    # print(len(g))
-
-
-    # Illustrator.linestrings_to_graph(a)
-    # Illustrator.draw_walkways(a, "Illustrator5.png")
-    # b = WayMap("Illustrator5.png", MAP_COLORS)
-
-    # # print(type(b))
-    # Illustrator.render_array_as_png(paths_adder(b, 4, "find_path_between_random_spots"), "illustrator_test2.png", 2)
 
     pass

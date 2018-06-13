@@ -47,3 +47,20 @@ class Illustrator:
         writer.write(f, path_array)
         f.close()
 
+    # def process_png_into_array(map_file, map_colors):
+    #     reader_object = png.Reader(map_file)
+    #     size_x, size_y, contents_iterator, image_attributes = reader_object.read()
+    #     lenght_of_pixel = image_attributes["planes"]
+    #     new_list = []
+    #     for row in contents_iterator:
+    #         new_list.append(list(zip(*[iter(row)] * lenght_of_pixel)))
+    #     for sublist in new_list:
+    #         for i in range(len(sublist)):
+    #             if sublist[i] in map_colors["walkable"]:
+    #                 sublist[i] = map_colors["walkable"][sublist[i]]
+    #             elif sublist[i] in map_colors["unwalkable"]:
+    #                 sublist[i] = 0
+    #         sublist = tuple(sublist)
+    #     new_list = np.asarray(new_list, dtype="B")
+    #     image_attributes["map_colors"] = map_colors
+    #     return new_list, image_attributes

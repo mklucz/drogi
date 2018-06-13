@@ -3,10 +3,11 @@ import os
 import pickle
 import datetime
 from pympler import asizeof
-MAP_COLORS = {"walkable": {(0, 0, 0, 255): 1}, "unwalkable": {(255, 255, 255, 255): 0}}
 
-new_map = drogi.WayMap(os.path.dirname(__file__) + "/map.osm", MAP_COLORS)
-new_map.save_as_png("newtest.png")
+new_map = drogi.WayMap(os.path.dirname(__file__) + "/sample.osm")
+new_map.save_part_as_png("part_test.png", (100, 100, 100, 100))
+# new_map.save_as_png("newtest.png")
+
 # new_run = drogi.WorkRun(osm_file=sample, num_of_trips=10)
 # print(new_run.chunks[0].trips[0].way_map is new_run.chunks[0].trips[1].way_map)
 
