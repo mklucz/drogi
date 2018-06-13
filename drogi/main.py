@@ -30,20 +30,30 @@ class WayMap:
         self.minlon = self.handler.minlon
         self.maxlat = self.handler.maxlat
         self.maxlon = self.handler.maxlon
+        self.bounds = (self.minlon, self.maxlon, self.minlat, self.maxlat)
         
         self.graph = Graph(WayGraph(self.way_list))
 
-    def save_as_png(self, filename):
-        size = ((self.maxlon - self.minlon) * 400, (self.maxlat - self.minlat) * 400)
-        print(size)
+    def save_as_png(self, filename, partial_bounds=None):
+        if partial_bounds is None:
+            partial_bounds = self.bounds
+        if not isinstance(partial_bounds, tuple) or len(partial_bounds) != 4:
+            raise AttributeError("partial_bounds must be a 4-tuple")
+        p_minlon, p_maxlon = partial_bounds[0], partial_bounds[1]
+        p_minlat, p_maxlat = partial_bounds[2], partial_bounds[3]
+        if (p_minlon < self.minlon or p_maxlon > self.maxlon or 
+            p_minlat < self.minlat or p_maxlat > self.maxlat):
+            print(self.minlon, self.maxlon, self.minlat, self.maxlat)
+            raise ValueError("partial_bounds out of WayMap's bounds")
+        size = ((p_maxlon - p_minlon) * 400, (p_maxlat - p_minlat) * 400)
         fig = plt.figure(frameon=False, figsize=size)
         subplot = fig.add_subplot(111)
         fig.subplots_adjust(bottom = 0)
         fig.subplots_adjust(top = 1)
         fig.subplots_adjust(right = 1)
         fig.subplots_adjust(left = 0)
-        subplot.set_xlim((self.minlon, self.maxlon))
-        subplot.set_ylim((self.minlat, self.maxlat))
+        subplot.set_xlim((p_minlon, p_maxlon))
+        subplot.set_ylim((p_minlat, p_maxlat))
         subplot.axis("off")
         subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False, labelleft=False,
                             labeltop=False, labelright=False, labelbottom=False, length=0, width=0, pad=0)
@@ -58,14 +68,6 @@ class WayMap:
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         # plt.autoscale(tight=False, enable=False)
         plt.savefig(filename, dpi=100, bbox_inches="tight", pad_inches=0)
-
-    def save_part_as_png(self, filename, partial_bounds):
-        partial_minlon, partial_maxlon = partial_bounds[0], partial_bounds[1]
-        partial_minlat, partial_maxlat = partial_bounds[2], partial_bounds[3]
-        if (partial_minlon > self.minlon or partial_maxlon > self.maxlon or 
-            partial_minlat > self.minlat or partial_maxlat > self.maxlat):
-            raise ValueError("partial_bounds out of WayMap's bounds")
-
 
 
 class WorkRun():

@@ -5,7 +5,8 @@ import datetime
 from pympler import asizeof
 
 new_map = drogi.WayMap(os.path.dirname(__file__) + "/sample.osm")
-new_map.save_part_as_png("part_test.png", (100, 100, 100, 100))
+# new_map.save_part_as_png("part_test.png", (100, 100, 100))
+new_map.save_part_as_png("part_test_full.png")
 # new_map.save_as_png("newtest.png")
 
 # new_run = drogi.WorkRun(osm_file=sample, num_of_trips=10)
