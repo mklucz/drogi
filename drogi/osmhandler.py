@@ -2,12 +2,12 @@ import osmium
 import shapely.wkb as wkblib
 import xml.etree.ElementTree
 
+
 WALKABLE_TAGS = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",
                  "residential", "crossing"]
 WALKABLE_TAGS_FLAT = ["footway", "bridleway", "living_street", "pedestrian",
                       "residential"]
 WKB_FACTORY = osmium.geom.WKBFactory()
-mapka = "map.osm"
 
 class WalkwayContainer:
     def __init__(self, way, category):
@@ -20,14 +20,7 @@ class OSMHandler(osmium.SimpleHandler):
     def __init__(self, osm_file):
         osmium.SimpleHandler.__init__(self)
         self.osm_file = osm_file
-        self.minlat, self.minlon, self.maxlat, self.maxlon = [float(e) for e in self.get_bounds(osm_file)]
         self.way_list = []
-
-    def get_bounds(self, osm_file):
-        for line in open(osm_file):
-            if "<bounds" in line:
-                loaded_xml = xml.etree.ElementTree.fromstring(line)
-                return loaded_xml.get("minlat"), loaded_xml.get("minlon"), loaded_xml.get("maxlat"), loaded_xml.get("maxlon")
     
     def way(self, w):
         try:

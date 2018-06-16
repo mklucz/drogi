@@ -3,47 +3,65 @@ import numpy as np
 import png
 import pickle
 import random
-
-# import shapely
+import overpass
 
 from shapely.geometry import LineString
 # from skimage import feature
-# from pympler import asizeof
-# from pathfinding.core.grid import Grid
 from networkx.algorithms.shortest_paths.astar import astar_path
 from networkx import Graph
 from networkx.exception import NetworkXNoPath
+from datetime import datetime
+
 
 from .osmhandler import *
 from .illustrator import Illustrator
 from .pathfinder import Pathfinder
 
-
 class WayMap:
-    def __init__(self, map_file):
-        self.map_file = map_file
+    """Contains GIS-type data describing physical layout of ways in a particular area"""
 
-        self.handler = OSMHandler(self.map_file)
-        self.handler.apply_file(self.map_file, locations=True)
+    def __init__(self, bounds_to_fetch, filename=None):
+        """
+        Args:
+            bounds_to_fetch(4-tuple): geographic bounding box of the area to be.
+                mapped, in the following order: (minlat, minlon, maxlat, maxlon)
+            filename(str): filename to save the fetched extract as.
+        """
+        self.minlat = bounds_to_fetch[0]
+        self.minlon = bounds_to_fetch[1]
+        self.maxlat = bounds_to_fetch[2]
+        self.maxlon = bounds_to_fetch[3]
+        if filename is None:
+            filename = "extract_" + str(datetime.now()).replace(" ", "_") + ".osm"
+        api = overpass.API(timeout=600)
+        map_query = overpass.MapQuery(self.minlat, self.minlon, self.maxlat, self.maxlon)
+        response = api.get(map_query, responseformat="xml")
+        with open(filename, "w") as f:
+            f.write(response)
+        self.handler = OSMHandler(filename)
+        self.handler.apply_file(filename, locations=True)
         self.way_list = self.handler.way_list
-        self.minlat = self.handler.minlat
-        self.minlon = self.handler.minlon
-        self.maxlat = self.handler.maxlat
-        self.maxlon = self.handler.maxlon
-        self.bounds = (self.minlon, self.maxlon, self.minlat, self.maxlat)
-        
+        self.bounds = (self.minlat, self.minlon, self.maxlat, self.maxlon)
         self.graph = Graph(WayGraph(self.way_list))
 
     def save_as_png(self, filename, partial_bounds=None):
+        """
+        Renders the map and saves it as a png in current working directory
+            Args:
+                filename(str): filename to save the png as.
+                partial_bounds(4-tuple, optional): 4 points describing the 
+                    rectangle to be rendered, if None the whole map is rendered.
+            Returns:
+                None
+        """
         if partial_bounds is None:
             partial_bounds = self.bounds
         if not isinstance(partial_bounds, tuple) or len(partial_bounds) != 4:
             raise AttributeError("partial_bounds must be a 4-tuple")
-        p_minlon, p_maxlon = partial_bounds[0], partial_bounds[1]
-        p_minlat, p_maxlat = partial_bounds[2], partial_bounds[3]
+        p_minlat, p_maxlat = partial_bounds[0], partial_bounds[2]
+        p_minlon, p_maxlon = partial_bounds[1], partial_bounds[3]
         if (p_minlon < self.minlon or p_maxlon > self.maxlon or 
             p_minlat < self.minlat or p_maxlat > self.maxlat):
-            print(self.minlon, self.maxlon, self.minlat, self.maxlat)
             raise ValueError("partial_bounds out of WayMap's bounds")
         size = ((p_maxlon - p_minlon) * 400, (p_maxlat - p_minlat) * 400)
         fig = plt.figure(frameon=False, figsize=size)
@@ -71,7 +89,7 @@ class WayMap:
 
 
 class WorkRun():
-    """docstring for WorkRun"""
+    """Runs a set of simulations"""
     def __init__(self,
                  bounds=None,
                  osm_file=None,

@@ -3,7 +3,7 @@
 # name = "drogi"
 __author__ = "Maciej Kluczyński"
 __email__ = "maciej.lukasz.kluczynski@gmail.com"
-__version__ = "0.0.12"
+__version__ = "0.0.13"
 __copyright__ = "Copyright Maciej Kluczyński 2018"
 __license__ = 'MIT'
 

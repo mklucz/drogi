@@ -1,12 +1,16 @@
 import drogi
 import os
-import pickle
-import datetime
-from pympler import asizeof
+# import pickle
+# import datetime
+# from pympler import asizeof
 
-new_map = drogi.WayMap(os.path.dirname(__file__) + "/sample.osm")
-# new_map.save_part_as_png("part_test.png", (100, 100, 100))
-new_map.save_part_as_png("part_test_full.png")
+new_map = drogi.WayMap((51.2412000, 22.5079000, 51.2470000, 22.5115000))
+new_map.save_as_png("newwaymap.png")
+# print(new_map.response[:100])
+
+
+# new_map = drogi.WayMap(os.path.dirname(__file__) + "/sample.osm")
+# new_map.save_as_png("part_test_full.png")
 # new_map.save_as_png("newtest.png")
 
 # new_run = drogi.WorkRun(osm_file=sample, num_of_trips=10)
