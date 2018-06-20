@@ -4,6 +4,7 @@ import png
 import pickle
 import random
 import overpass
+import psycopg2
 
 from shapely.geometry import LineString
 # from skimage import feature
@@ -91,47 +92,57 @@ class WayMap:
 class WorkRun():
     """Runs a set of simulations"""
     def __init__(self,
-                 bounds=None,
-                 osm_file=None,
-                 num_of_chunks=1,
-                 chunk_size=None,
+                 bounds,
                  num_of_trips=1,
                  origin_choice="random",
                  destination_choice="random",
                  allowed_means_of_transport="walking",
-                 database=None):
+                 dbname="firsttest",
+                 dbuser="postgres"):
+        """
+        Top level class that conducts the simulations by getting the data, 
+        turning it into a pathfind-able form, traversing that repeatedly and 
+        saving the paths in a database.
+        """
         super(WorkRun, self).__init__()
         self.bounds = bounds
-        self.osm_file = osm_file
-        self.num_of_chunks = num_of_chunks
-        self.chunk_size = chunk_size
         self.num_of_trips = num_of_trips
         self.origin_choice = origin_choice
         self.destination_choice = destination_choice
         self.allowed_means_of_transport = allowed_means_of_transport
-        self.database = database
+        self.dbname = dbname
+        self.dbuser = dbuser
+        self.way_map = WayMap(self.bounds)
+        
+        table_name = str(datetime.now()).replace(" ", "_") + "_" +
+                     str(bounds).replace(" ", "")
+        conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
+        cur = conn.cursor()
+        creating_query = ("""CREATE TABLE %s (id serial PRIMARY KEY, 
+                                        "start" numeric,
+                                        "end" numeric,
+                                        "path" );""")
+        cur.execute(creating_query, table_name)
 
-        self.chunks = []
+        # INSERT INTO test_arrays (path) VALUES ('{1, 2, 3, 4}');
+        
+        points_list = list(way_map.graph)
+        if len(points_list) < 2:
+            raise ValueError("Not enough points on map")
+        
+        for trip in range(self.num_of_trips):
+            start, end = random.sample(points_list, 2)
 
-        for i in range(num_of_chunks):
-            way_map = WayMap(self.osm_file)
-            chunk = Chunk(way_map, trips=[], num_of_trips=self.num_of_trips)
-            points_list = list(way_map.graph)
-            if len(points_list) < 2:
-                raise ValueError("Not enough points on map")
-            # trips = []
-            for trip in range(self.num_of_trips):
-                start, end = random.sample(points_list, 2)
-                chunk.trips.append(Trip(way_map, start, end))
-            self.chunks.append(chunk)
+    def insert_trip_into_db(trip):
+        pass
 
-class Chunk(object):
-    """docstring for Chunk"""
-    def __init__(self, way_map, trips=[], num_of_trips=1):
-        super(Chunk, self).__init__()
-        self.way_map = way_map
-        self.trips = trips
-        self.num_of_trips = num_of_trips
+# class Chunk(object):
+#     """docstring for Chunk"""
+#     def __init__(self, way_map, trips=[], num_of_trips=1):
+#         super(Chunk, self).__init__()
+#         self.way_map = way_map
+#         self.trips = trips
+#         self.num_of_trips = num_of_trips
         
 
 class Trip():
