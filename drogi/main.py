@@ -5,6 +5,7 @@ import pickle
 import random
 import overpass
 import psycopg2
+import re
 
 from shapely.geometry import LineString
 # from skimage import feature
@@ -98,11 +99,11 @@ class WorkRun():
                  destination_choice="random",
                  allowed_means_of_transport="walking",
                  dbname="firsttest",
-                 dbuser="postgres"):
+                 dbuser="maciek"):
         """
         Top level class that conducts the simulations by getting the data, 
-        turning it into a pathfind-able form, traversing that repeatedly and 
-        saving the paths in a database.
+        turning it into a pathfind-able form, traversing it repeatedly and 
+        saving the paths in a postgres database.
         """
         super(WorkRun, self).__init__()
         self.bounds = bounds
@@ -114,27 +115,38 @@ class WorkRun():
         self.dbuser = dbuser
         self.way_map = WayMap(self.bounds)
         
-        table_name = str(datetime.now()).replace(" ", "_") + "_" +
-                     str(bounds).replace(" ", "")
+        self.table_name = str(datetime.now()).replace(" ", "_") + "_" + str(bounds).replace(" ", "")
+        self.table_name = re.sub("[^0-9]", "_", self.table_name)
+        self.table_name = "placeholder"
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         creating_query = ("""CREATE TABLE %s (id serial PRIMARY KEY, 
                                         "start" numeric,
                                         "end" numeric,
-                                        "path" );""")
-        cur.execute(creating_query, table_name)
+                                        "path" numeric[][]
+                                         );""")
+        cur.execute(creating_query % self.table_name)
 
         # INSERT INTO test_arrays (path) VALUES ('{1, 2, 3, 4}');
         
-        points_list = list(way_map.graph)
+        points_list = list(self.way_map.graph)
         if len(points_list) < 2:
             raise ValueError("Not enough points on map")
         
         for trip in range(self.num_of_trips):
             start, end = random.sample(points_list, 2)
+            new_trip = Trip(self.way_map, start, end)
+            self.insert_trip_into_db(new_trip)
 
-    def insert_trip_into_db(trip):
-        pass
+    def insert_trip_into_db(self, trip):
+        conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
+        cur = conn.cursor()
+        inserting_query = """INSERT INTO %s
+                           VALUES (NULL, %s, %s, %s);"""
+        cur.execute(inserting_query % (self.table_name,
+                                       trip.start,
+                                       trip.end,
+                                       trip.path.list_of_nodes))
 
 # class Chunk(object):
 #     """docstring for Chunk"""
@@ -157,6 +169,7 @@ class Trip():
             self.is_traversible = True
         else:
             self.is_traversible = False
+
         
 
 class Path(LineString):
