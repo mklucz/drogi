@@ -4,10 +4,10 @@ import os
 # import datetime
 # from pympler import asizeof
 
-new_run = drogi.WorkRun((51.2412000, 22.5079000, 51.2470000, 22.5115000),
+new_run = drogi.WorkRun((51.2452000, 22.5079000, 51.2510000, 22.5135000),
 						num_of_trips=3,
 						)
-
+new_run.way_map.save_as_png("test.png")
 # new_map = drogi.WayMap((51.2412000, 22.5079000, 51.2470000, 22.5115000))
 # new_map.save_as_png("newwaymap.png")
 # print(new_map.response[:100])

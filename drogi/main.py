@@ -6,6 +6,7 @@ import random
 import overpass
 import psycopg2
 import re
+import json
 
 from shapely.geometry import LineString
 # from skimage import feature
@@ -123,7 +124,7 @@ class WorkRun():
         creating_query = ("""CREATE TABLE %s (id serial PRIMARY KEY, 
                                         "start" numeric,
                                         "end" numeric,
-                                        "path" numeric[][]
+                                        "path" json
                                          );""")
         cur.execute(creating_query % self.table_name)
 
@@ -139,23 +140,20 @@ class WorkRun():
             self.insert_trip_into_db(new_trip)
 
     def insert_trip_into_db(self, trip):
+        # print(json.dumps(trip.path.list_of_nodes))
+        # print(len(trip.path.list_of_nodes))
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         inserting_query = """INSERT INTO %s
-                           VALUES (NULL, %s, %s, %s);"""
+                           VALUES (NULL,
+                                   %s,
+                                   %s,
+                                   %s);"""
         cur.execute(inserting_query % (self.table_name,
                                        trip.start,
                                        trip.end,
-                                       trip.path.list_of_nodes))
+                                       json.dumps(trip.path.list_of_nodes)))
 
-# class Chunk(object):
-#     """docstring for Chunk"""
-#     def __init__(self, way_map, trips=[], num_of_trips=1):
-#         super(Chunk, self).__init__()
-#         self.way_map = way_map
-#         self.trips = trips
-#         self.num_of_trips = num_of_trips
-        
 
 class Trip():
     """docstring for Trip"""
@@ -183,6 +181,7 @@ class Path(LineString):
             self.list_of_nodes = astar_path(self.way_map.graph, self.start, self.end)
         except NetworkXNoPath:
             self.list_of_nodes = []
+        print("json.dumps", json.dumps(self.list_of_nodes))
         self.linestring = LineString(self.list_of_nodes)
     def __len__(self):
         return len(self.list_of_nodes)
