@@ -13,5 +13,15 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mklucz/drogi",
-    packages=setuptools.find_packages()
+    packages=setuptools.find_packages(),
+    install_requires=[
+        "matplotlib",
+        "pypng",
+        "overpass >= 0.6.0",
+        "psycopg2",
+        "shapely",
+        "networkx",
+        "osmium",
+        "pathfinding"
+    ]
 )
