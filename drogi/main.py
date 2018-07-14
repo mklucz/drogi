@@ -99,8 +99,8 @@ class WorkRun():
                  origin_choice="random",
                  destination_choice="random",
                  allowed_means_of_transport="walking",
-                 dbname="firsttest",
-                 dbuser="maciek"):
+                 dbname="secondtest",
+                 dbuser="mklucz"):
         """
         Top level class that conducts the simulations by getting the data, 
         turning it into a pathfind-able form, traversing it repeatedly and 
@@ -116,15 +116,15 @@ class WorkRun():
         self.dbuser = dbuser
         self.way_map = WayMap(self.bounds)
         
-        self.table_name = str(datetime.now()).replace(" ", "_") + "_" + str(bounds).replace(" ", "")
-        self.table_name = re.sub("[^0-9]", "_", self.table_name)
-        self.table_name = "placeholder"
+        self.table_name = str(datetime.now()).replace(" ", "") # + "_" + str(bounds).replace(" ", "")
+        self.table_name = re.sub("[^0-9]", "", self.table_name)
+        self.table_name = "_" + self.table_name
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         creating_query = ("""CREATE TABLE %s (id serial PRIMARY KEY, 
                                         "start" numeric,
                                         "end" numeric,
-                                        "path" json
+                                        "path" jsonb
                                          );""")
         cur.execute(creating_query % self.table_name)
 
@@ -140,19 +140,17 @@ class WorkRun():
             self.insert_trip_into_db(new_trip)
 
     def insert_trip_into_db(self, trip):
-        # print(json.dumps(trip.path.list_of_nodes))
+        print("JSON DUMP", json.dumps(trip.path.list_of_nodes))
         # print(len(trip.path.list_of_nodes))
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
-        inserting_query = """INSERT INTO %s
-                           VALUES (NULL,
-                                   %s,
-                                   %s,
-                                   %s);"""
+        inserting_query = """INSERT INTO %s(id, start, "end", "path")
+                           VALUES (NULL, %s, %s, "%s::json[]");"""
         cur.execute(inserting_query % (self.table_name,
                                        trip.start,
                                        trip.end,
                                        json.dumps(trip.path.list_of_nodes)))
+                                       # "what"))
 
 
 class Trip():
