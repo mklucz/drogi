@@ -121,12 +121,17 @@ class WorkRun():
         self.table_name = "_" + self.table_name
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
-        creating_query = ("""CREATE TABLE %s (id serial PRIMARY KEY, 
-                                        "start" numeric,
-                                        "end" numeric,
-                                        "path" jsonb
+        creating_query = ("""CREATE TABLE %s (id serial NOT NULL PRIMARY KEY, 
+                                        "start" numeric[2],
+                                        "end" numeric[2],
+                                        "path" json
                                          );""")
         cur.execute(creating_query % self.table_name)
+        conn.commit()
+        cur.execute("""SELECT table_name FROM information_schema.tables
+                       WHERE table_schema = 'public'""")
+        for table in cur.fetchall():
+            print(table)
 
         # INSERT INTO test_arrays (path) VALUES ('{1, 2, 3, 4}');
         
@@ -140,15 +145,15 @@ class WorkRun():
             self.insert_trip_into_db(new_trip)
 
     def insert_trip_into_db(self, trip):
-        print("JSON DUMP", json.dumps(trip.path.list_of_nodes))
+        # print("JSON DUMP", json.dumps(trip.path.list_of_nodes))
         # print(len(trip.path.list_of_nodes))
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         inserting_query = """INSERT INTO %s(id, start, "end", "path")
-                           VALUES (NULL, %s, %s, "%s::json[]");"""
+                           VALUES (NULL, '%s', '%s', '%s');"""
         cur.execute(inserting_query % (self.table_name,
-                                       trip.start,
-                                       trip.end,
+                                       list(trip.start),
+                                       list(trip.end),
                                        json.dumps(trip.path.list_of_nodes)))
                                        # "what"))
 
@@ -179,7 +184,6 @@ class Path(LineString):
             self.list_of_nodes = astar_path(self.way_map.graph, self.start, self.end)
         except NetworkXNoPath:
             self.list_of_nodes = []
-        print("json.dumps", json.dumps(self.list_of_nodes))
         self.linestring = LineString(self.list_of_nodes)
     def __len__(self):
         return len(self.list_of_nodes)
