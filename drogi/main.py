@@ -122,8 +122,8 @@ class WorkRun():
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         creating_query = ("""CREATE TABLE %s (id serial NOT NULL PRIMARY KEY, 
-                                        "start" numeric[2],
-                                        "end" numeric[2],
+                                        "start" numeric ARRAY[2],
+                                        "end" numeric ARRAY[2],
                                         "path" json
                                          );""")
         cur.execute(creating_query % self.table_name)
@@ -149,11 +149,11 @@ class WorkRun():
         # print(len(trip.path.list_of_nodes))
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
-        inserting_query = """INSERT INTO %s(id, start, "end", "path")
-                           VALUES (NULL, '%s', '%s', '%s');"""
+        inserting_query = """INSERT INTO %s(start, "end", "path")
+                           VALUES ('%s', '%s', '%s');"""
         cur.execute(inserting_query % (self.table_name,
-                                       list(trip.start),
-                                       list(trip.end),
+                                       str(list(trip.start)).replace('[', '{').replace(']', '}'),
+                                       str(list(trip.end)).replace('[', '{').replace(']', '}'),
                                        json.dumps(trip.path.list_of_nodes)))
                                        # "what"))
 
