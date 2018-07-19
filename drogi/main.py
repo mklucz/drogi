@@ -99,7 +99,7 @@ class WorkRun():
                  origin_choice="random",
                  destination_choice="random",
                  allowed_means_of_transport="walking",
-                 dbname="secondtest",
+                 dbname="thirdtest",
                  dbuser="mklucz"):
         """
         Top level class that conducts the simulations by getting the data, 
@@ -128,12 +128,10 @@ class WorkRun():
                                          );""")
         cur.execute(creating_query % self.table_name)
         conn.commit()
-        cur.execute("""SELECT table_name FROM information_schema.tables
-                       WHERE table_schema = 'public'""")
-        for table in cur.fetchall():
-            print(table)
-
-        # INSERT INTO test_arrays (path) VALUES ('{1, 2, 3, 4}');
+        # cur.execute("""SELECT table_name FROM information_schema.tables
+        #                WHERE table_schema = 'public'""")
+        # for table in cur.fetchall():
+        #     print(table)
         
         points_list = list(self.way_map.graph)
         if len(points_list) < 2:
@@ -143,10 +141,13 @@ class WorkRun():
             start, end = random.sample(points_list, 2)
             new_trip = Trip(self.way_map, start, end)
             self.insert_trip_into_db(new_trip)
-
+        
+        cur.execute("""SELECT table_name FROM information_schema.tables
+                       WHERE table_schema = 'public'""")
+        for table in cur.fetchall():
+            print(table)
+        
     def insert_trip_into_db(self, trip):
-        # print("JSON DUMP", json.dumps(trip.path.list_of_nodes))
-        # print(len(trip.path.list_of_nodes))
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         inserting_query = """INSERT INTO %s(start, "end", "path")
@@ -155,7 +156,8 @@ class WorkRun():
                                        str(list(trip.start)).replace('[', '{').replace(']', '}'),
                                        str(list(trip.end)).replace('[', '{').replace(']', '}'),
                                        json.dumps(trip.path.list_of_nodes)))
-                                       # "what"))
+        conn.commit()
+        conn.close()
 
 
 class Trip():
@@ -201,6 +203,7 @@ class WayGraph(dict):
             y = linestring.coords.xy[1]
             for i in range(len(x)):
                 xy = (x[i], y[i])
+                xy = tuple([round(e, 6) for e in xy])
                 if i == 0:
                     if xy not in self:
                         self[xy] = [(x[i + 1], y[i + 1])]
