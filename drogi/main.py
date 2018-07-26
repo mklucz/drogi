@@ -148,22 +148,21 @@ class WorkRun():
         for trip in range(self.num_of_trips):
             if self.origin_choice == "random":
                 start = random.choice(self.points_list)
-                print("XXXX\n\n", start)
             if self.destination_choice == "random":
-                end_candidate = random.sample(self.points_list, 1)
+                end = self.find_random_destination_inside_radius(start)
 
             new_trip = Trip(self.way_map, start, end)
             self.insert_trip_into_db(new_trip)
         
-    def straightline_distance(p1, p2):
-        x_dist = abs(p1[0] - p2[0])
-        y_dist = abs(p1[1] - p2[1])
-        return sqrt(x_dist**2 + y_dist**2)
 
 
-    def find_random_destination_inside_radius(start):
+    def find_random_destination_inside_radius(self, start):
         max_radius = self.max_radius_of_trip
-        end_candidate = random.sample(self.points_list, 1)
+        while True:
+            end_candidate = random.choice(self.points_list)
+            if end_candidate != start and straightline_distance(start, end_candidate) < max_radius:
+                return end_candidate
+
 
 
 
@@ -189,7 +188,7 @@ class Trip():
         self.start = start
         self.end = end
         self.path = Path(self.way_map, self.start, self.end)
-        if len(self.path) >= 2:
+        if len(self.path.list_of_nodes) >= 2:
             self.is_traversible = True
         else:
             self.is_traversible = False
@@ -207,10 +206,8 @@ class Path(LineString):
             self.list_of_nodes = astar_path(self.way_map.graph, self.start, self.end)
         except NetworkXNoPath:
             self.list_of_nodes = []
-        self.linestring = MultiLineString(self.list_of_nodes)
-        self.length = self.linestring.length
-        self.straightline_length = LineString(self.start, self.end).length
-           
+        self.straightline_length = straightline_distance(self.start, self.end)
+    
 
 class WayGraph(dict):
     """docstring for WayGraph"""
@@ -241,6 +238,12 @@ class WayGraph(dict):
                     else:
                         self[xy].append((x[i + 1], y[i + 1]))
                         self[xy].append((x[i - 1], y[i - 1]))
+
+
+def straightline_distance(p1, p2):
+    x_dist = abs(p1[0] - p2[0])
+    y_dist = abs(p1[1] - p2[1])
+    return sqrt(x_dist**2 + y_dist**2)
 
 
 def paths_adder(way_map, num_of_paths, walking_function):
