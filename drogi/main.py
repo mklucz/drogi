@@ -8,17 +8,22 @@ import psycopg2
 import re
 import json
 
-from shapely.geometry import LineString
+from shapely.geometry import LineString, MultiLineString
 # from skimage import feature
 from networkx.algorithms.shortest_paths.astar import astar_path
 from networkx import Graph
 from networkx.exception import NetworkXNoPath
 from datetime import datetime
-
+from math import sqrt
 
 from .osmhandler import *
 from .illustrator import Illustrator
 from .pathfinder import Pathfinder
+
+BOUNDS_DICT = {
+    "Lublin" : (51.1942, 22.4145, 51.3040, 22.6665),
+    "small_test" : (51.2412000, 22.5079000, 51.2470000, 22.5115000)
+}
 
 class WayMap:
     """Contains GIS-type data describing physical layout of ways in a particular area"""
@@ -99,6 +104,7 @@ class WorkRun():
                  origin_choice="random",
                  destination_choice="random",
                  allowed_means_of_transport="walking",
+                 max_radius_of_trip = 0.01,
                  dbname="thirdtest",
                  dbuser="mklucz"):
         """
@@ -112,6 +118,7 @@ class WorkRun():
         self.origin_choice = origin_choice
         self.destination_choice = destination_choice
         self.allowed_means_of_transport = allowed_means_of_transport
+        self.max_radius_of_trip = max_radius_of_trip
         self.dbname = dbname
         self.dbuser = dbuser
         self.way_map = WayMap(self.bounds)
@@ -119,6 +126,7 @@ class WorkRun():
         self.table_name = str(datetime.now()).replace(" ", "") # + "_" + str(bounds).replace(" ", "")
         self.table_name = re.sub("[^0-9]", "", self.table_name)
         self.table_name = "_" + self.table_name
+        
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         creating_query = ("""CREATE TABLE %s (id serial NOT NULL PRIMARY KEY, 
@@ -133,20 +141,33 @@ class WorkRun():
         # for table in cur.fetchall():
         #     print(table)
         
-        points_list = list(self.way_map.graph)
-        if len(points_list) < 2:
+        self.points_list = list(self.way_map.graph)
+        if len(self.points_list) < 2:
             raise ValueError("Not enough points on map")
         
         for trip in range(self.num_of_trips):
-            start, end = random.sample(points_list, 2)
+            if self.origin_choice == "random":
+                start = random.choice(self.points_list)
+                print("XXXX\n\n", start)
+            if self.destination_choice == "random":
+                end_candidate = random.sample(self.points_list, 1)
+
             new_trip = Trip(self.way_map, start, end)
             self.insert_trip_into_db(new_trip)
         
-        cur.execute("""SELECT table_name FROM information_schema.tables
-                       WHERE table_schema = 'public'""")
-        for table in cur.fetchall():
-            print(table)
-        
+    def straightline_distance(p1, p2):
+        x_dist = abs(p1[0] - p2[0])
+        y_dist = abs(p1[1] - p2[1])
+        return sqrt(x_dist**2 + y_dist**2)
+
+
+    def find_random_destination_inside_radius(start):
+        max_radius = self.max_radius_of_trip
+        end_candidate = random.sample(self.points_list, 1)
+
+
+
+
     def insert_trip_into_db(self, trip):
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
@@ -186,9 +207,9 @@ class Path(LineString):
             self.list_of_nodes = astar_path(self.way_map.graph, self.start, self.end)
         except NetworkXNoPath:
             self.list_of_nodes = []
-        self.linestring = LineString(self.list_of_nodes)
-    def __len__(self):
-        return len(self.list_of_nodes)
+        self.linestring = MultiLineString(self.list_of_nodes)
+        self.length = self.linestring.length
+        self.straightline_length = LineString(self.start, self.end).length
            
 
 class WayGraph(dict):
