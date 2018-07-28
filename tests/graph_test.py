@@ -6,7 +6,7 @@ import os
 # 51.2452000, 22.5079000, 51.2510000, 22.5135000)
 
 
-new_run = drogi.WorkRun(drogi.BOUNDS_DICT["small_test"], num_of_trips=1)
+new_run = drogi.WorkRun("small_test", num_of_trips=1)
 
 
 # new_map = drogi.WayMap((51.2412000, 22.5079000, 51.2470000, 22.5115000))

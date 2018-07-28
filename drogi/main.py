@@ -28,19 +28,20 @@ BOUNDS_DICT = {
 class WayMap:
     """Contains GIS-type data describing physical layout of ways in a particular area"""
 
-    def __init__(self, bounds_to_fetch, filename=None):
+    def __init__(self, area, filename=None):
         """
         Args:
-            bounds_to_fetch(4-tuple): geographic bounding box of the area to be.
-                mapped, in the following order: (minlat, minlon, maxlat, maxlon)
+            area(str): geographical area to be fetched and turned into a map
             filename(str): filename to save the fetched extract as.
         """
-        self.minlat = bounds_to_fetch[0]
-        self.minlon = bounds_to_fetch[1]
-        self.maxlat = bounds_to_fetch[2]
-        self.maxlon = bounds_to_fetch[3]
+        self.area = area
+        self.bounds_to_fetch = BOUNDS_DICT[area]
+        self.minlat = self.bounds_to_fetch[0]
+        self.minlon = self.bounds_to_fetch[1]
+        self.maxlat = self.bounds_to_fetch[2]
+        self.maxlon = self.bounds_to_fetch[3]
         if filename is None:
-            filename = "extract_" + str(datetime.now()).replace(" ", "_") + ".osm"
+            filename = self.area + str(datetime.now()).replace(" ", "_") + ".osm"
         api = overpass.API(timeout=600)
         map_query = overpass.MapQuery(self.minlat, self.minlon, self.maxlat, self.maxlon)
         response = api.get(map_query, responseformat="xml")
@@ -52,11 +53,11 @@ class WayMap:
         self.bounds = (self.minlat, self.minlon, self.maxlat, self.maxlon)
         self.graph = Graph(WayGraph(self.way_list))
 
-    def save_as_png(self, filename, partial_bounds=None):
+    def save_as_png(self, img_filename, partial_bounds=None):
         """
         Renders the map and saves it as a png in current working directory
             Args:
-                filename(str): filename to save the png as.
+                img_filename(str): filename to save the png as.
                 partial_bounds(4-tuple, optional): 4 points describing the 
                     rectangle to be rendered, if None the whole map is rendered.
             Returns:
@@ -93,13 +94,13 @@ class WayMap:
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         # plt.autoscale(tight=False, enable=False)
-        plt.savefig(filename, dpi=100, bbox_inches="tight", pad_inches=0)
+        plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
 
 
 class WorkRun():
     """Runs a set of simulations"""
     def __init__(self,
-                 bounds,
+                 area,
                  num_of_trips=1,
                  origin_choice="random",
                  destination_choice="random",
@@ -112,8 +113,8 @@ class WorkRun():
         turning it into a pathfind-able form, traversing it repeatedly and 
         saving the paths in a postgres database.
         """
-        super(WorkRun, self).__init__()
-        self.bounds = bounds
+        self.area = area
+        self.bounds = BOUNDS_DICT[self.area]
         self.num_of_trips = num_of_trips
         self.origin_choice = origin_choice
         self.destination_choice = destination_choice
@@ -121,7 +122,7 @@ class WorkRun():
         self.max_radius_of_trip = max_radius_of_trip
         self.dbname = dbname
         self.dbuser = dbuser
-        self.way_map = WayMap(self.bounds)
+        self.way_map = WayMap(self.area)
         
         self.table_name = str(datetime.now()).replace(" ", "") # + "_" + str(bounds).replace(" ", "")
         self.table_name = re.sub("[^0-9]", "", self.table_name)
