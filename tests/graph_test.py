@@ -7,6 +7,7 @@ import os
 
 
 new_run = drogi.WorkRun("small_test", num_of_trips=1)
+new_run.list_of_trips[0].path.save_as_png("red_path.png")
 
 
 # new_map = drogi.WayMap((51.2412000, 22.5079000, 51.2470000, 22.5115000))

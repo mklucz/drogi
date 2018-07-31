@@ -93,7 +93,6 @@ class WayMap:
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        # plt.autoscale(tight=False, enable=False)
         plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
 
 
@@ -123,7 +122,8 @@ class WorkRun():
         self.dbname = dbname
         self.dbuser = dbuser
         self.way_map = WayMap(self.area)
-        
+        self.list_of_trips = []
+
         self.table_name = str(datetime.now()).replace(" ", "") # + "_" + str(bounds).replace(" ", "")
         self.table_name = re.sub("[^0-9]", "", self.table_name)
         self.table_name = "_" + self.table_name
@@ -153,6 +153,7 @@ class WorkRun():
                 end = self.find_random_destination_inside_radius(start)
 
             new_trip = Trip(self.way_map, start, end)
+            self.list_of_trips.append(new_trip)
             self.insert_trip_into_db(new_trip)
         
 
@@ -208,6 +209,28 @@ class Path(LineString):
         except NetworkXNoPath:
             self.list_of_nodes = []
         self.straightline_length = straightline_distance(self.start, self.end)
+
+    def save_as_png(self, img_filename):
+        partial_bounds = self.way_map.bounds
+        p_minlat, p_maxlat = partial_bounds[0], partial_bounds[2]
+        p_minlon, p_maxlon = partial_bounds[1], partial_bounds[3]
+        size = ((p_maxlon - p_minlon) * 400, (p_maxlat - p_minlat) * 400)
+        fig = plt.figure(frameon=False, figsize=size)
+        subplot = fig.add_subplot(111)
+        fig.subplots_adjust(bottom = 0)
+        fig.subplots_adjust(top = 1)
+        fig.subplots_adjust(right = 1)
+        fig.subplots_adjust(left = 0)
+        subplot.set_xlim((p_minlon, p_maxlon))
+        subplot.set_ylim((p_minlat, p_maxlat))
+        subplot.axis("off")
+        subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False, labelleft=False,
+                            labeltop=False, labelright=False, labelbottom=False, length=0, width=0, pad=0)
+        subplot.plot(self.list_of_nodes, color="red", aa=False, linewidth=0.1)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
+
     
 
 class WayGraph(dict):
