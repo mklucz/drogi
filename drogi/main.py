@@ -18,11 +18,10 @@ from math import sqrt
 
 from .osmhandler import *
 from .illustrator import Illustrator
-from .pathfinder import Pathfinder
 
 BOUNDS_DICT = {
-    "Lublin" : (51.1942, 22.4145, 51.3040, 22.6665),
-    "small_test" : (51.2412000, 22.5079000, 51.2470000, 22.5115000)
+    "Lublin": (51.1942, 22.4145, 51.3040, 22.6665),
+    "small_test": (51.2412000, 22.5079000, 51.2470000, 22.5115000)
 }
 
 class WayMap:
@@ -69,21 +68,22 @@ class WayMap:
             raise AttributeError("partial_bounds must be a 4-tuple")
         p_minlat, p_maxlat = partial_bounds[0], partial_bounds[2]
         p_minlon, p_maxlon = partial_bounds[1], partial_bounds[3]
-        if (p_minlon < self.minlon or p_maxlon > self.maxlon or 
+        if (p_minlon < self.minlon or p_maxlon > self.maxlon or
             p_minlat < self.minlat or p_maxlat > self.maxlat):
             raise ValueError("partial_bounds out of WayMap's bounds")
         size = ((p_maxlon - p_minlon) * 400, (p_maxlat - p_minlat) * 400)
         fig = plt.figure(frameon=False, figsize=size)
         subplot = fig.add_subplot(111)
-        fig.subplots_adjust(bottom = 0)
-        fig.subplots_adjust(top = 1)
-        fig.subplots_adjust(right = 1)
-        fig.subplots_adjust(left = 0)
+        fig.subplots_adjust(bottom=0)
+        fig.subplots_adjust(top=1)
+        fig.subplots_adjust(right=1)
+        fig.subplots_adjust(left=0)
         subplot.set_xlim((p_minlon, p_maxlon))
         subplot.set_ylim((p_minlat, p_maxlat))
         subplot.axis("off")
-        subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False, labelleft=False,
-                            labeltop=False, labelright=False, labelbottom=False, length=0, width=0, pad=0)
+        subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False,
+                            labelleft=False, labeltop=False, labelright=False, labelbottom=False,
+                            length=0, width=0, pad=0)
         for e in self.way_list:
             if e.category == "walkway":
                 subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
@@ -127,7 +127,7 @@ class WorkRun():
         self.table_name = str(datetime.now()).replace(" ", "") # + "_" + str(bounds).replace(" ", "")
         self.table_name = re.sub("[^0-9]", "", self.table_name)
         self.table_name = "_" + self.table_name
-        
+
         conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
         cur = conn.cursor()
         creating_query = ("""CREATE TABLE %s (id serial NOT NULL PRIMARY KEY, 
@@ -141,11 +141,11 @@ class WorkRun():
         #                WHERE table_schema = 'public'""")
         # for table in cur.fetchall():
         #     print(table)
-        
+
         self.points_list = list(self.way_map.graph)
         if len(self.points_list) < 2:
             raise ValueError("Not enough points on map")
-        
+
         for trip in range(self.num_of_trips):
             if self.origin_choice == "random":
                 start = random.choice(self.points_list)
@@ -155,7 +155,7 @@ class WorkRun():
             new_trip = Trip(self.way_map, start, end)
             self.list_of_trips.append(new_trip)
             self.insert_trip_into_db(new_trip)
-        
+
 
 
     def find_random_destination_inside_radius(self, start):
@@ -195,7 +195,6 @@ class Trip():
         else:
             self.is_traversible = False
 
-        
 
 class Path(LineString):
     """docstring for Path"""
@@ -217,21 +216,21 @@ class Path(LineString):
         size = ((p_maxlon - p_minlon) * 400, (p_maxlat - p_minlat) * 400)
         fig = plt.figure(frameon=False, figsize=size)
         subplot = fig.add_subplot(111)
-        fig.subplots_adjust(bottom = 0)
-        fig.subplots_adjust(top = 1)
-        fig.subplots_adjust(right = 1)
-        fig.subplots_adjust(left = 0)
+        fig.subplots_adjust(bottom=0)
+        fig.subplots_adjust(top=1)
+        fig.subplots_adjust(right=1)
+        fig.subplots_adjust(left=0)
         subplot.set_xlim((p_minlon, p_maxlon))
         subplot.set_ylim((p_minlat, p_maxlat))
         subplot.axis("off")
-        subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False, labelleft=False,
-                            labeltop=False, labelright=False, labelbottom=False, length=0, width=0, pad=0)
+        subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False,
+                            labelleft=False, labeltop=False, labelright=False, labelbottom=False,
+                            length=0, width=0, pad=0)
         subplot.plot(self.list_of_nodes, color="red", aa=False, linewidth=0.1)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
 
-    
 
 class WayGraph(dict):
     """docstring for WayGraph"""
@@ -268,16 +267,6 @@ def straightline_distance(p1, p2):
     x_dist = abs(p1[0] - p2[0])
     y_dist = abs(p1[1] - p2[1])
     return sqrt(x_dist**2 + y_dist**2)
-
-
-def paths_adder(way_map, num_of_paths, walking_function):
-    holder_array = np.zeros_like(way_map.array, dtype="B")
-    for i in range(num_of_paths):
-        print("path: ", i)
-        new_path = Illustrator.draw_walked_path(way_map, walking_function)
-        np.add(holder_array, new_path, out=holder_array)
-    return holder_array
-    pass
 
 
 if __name__ == '__main__':

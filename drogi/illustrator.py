@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import png
-from .pathfinder import Pathfinder
 
 class Illustrator:
     def __init__(self, way_map, filename_to_save_with):
@@ -31,14 +29,6 @@ class Illustrator:
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.savefig(filename_to_save_with, dpi=200, bbox_inches="tight", pad_inches=0)
-    
-    def draw_walked_path(way_map, walking_function):
-        path = getattr(Pathfinder, walking_function)(way_map)
-        array_to_return = np.zeros_like(way_map.array, dtype="B")
-        for step in path:
-            y, x = step[0], step[1]
-            array_to_return[x][y] = 1
-        return array_to_return
 
     def render_array_as_png(path_array, filename, bitdepth):
         f = open(filename, "wb")

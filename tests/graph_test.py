@@ -6,7 +6,10 @@ import os
 # 51.2452000, 22.5079000, 51.2510000, 22.5135000)
 
 
-new_run = drogi.WorkRun("small_test", num_of_trips=1)
+new_run = drogi.WorkRun("small_test", num_of_trips=10)
+for i, trip in enumerate(new_run.list_of_trips):
+    if trip.is_traversible:
+        trip.path.save_as_png("saved_path" + str(i) + ".png")
 new_run.list_of_trips[0].path.save_as_png("red_path.png")
 
 
