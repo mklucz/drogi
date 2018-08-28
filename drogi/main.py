@@ -214,6 +214,8 @@ class Path(LineString):
         p_minlat, p_maxlat = partial_bounds[0], partial_bounds[2]
         p_minlon, p_maxlon = partial_bounds[1], partial_bounds[3]
         size = ((p_maxlon - p_minlon) * 400, (p_maxlat - p_minlat) * 400)
+        x_list = [p[0] for p in self.list_of_nodes]
+        y_list = [p[1] for p in self.list_of_nodes]
         fig = plt.figure(frameon=False, figsize=size)
         subplot = fig.add_subplot(111)
         fig.subplots_adjust(bottom=0)
@@ -226,7 +228,7 @@ class Path(LineString):
         subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False,
                             labelleft=False, labeltop=False, labelright=False, labelbottom=False,
                             length=0, width=0, pad=0)
-        subplot.plot(self.list_of_nodes, color="red", aa=False, linewidth=0.1)
+        subplot.plot(x_list, y_list, color="red", aa=False, linewidth=0.1)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)

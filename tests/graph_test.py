@@ -10,8 +10,8 @@ new_run = drogi.WorkRun("small_test", num_of_trips=10)
 for i, trip in enumerate(new_run.list_of_trips):
     if trip.is_traversible:
         trip.path.save_as_png("saved_path" + str(i) + ".png")
-new_run.list_of_trips[0].path.save_as_png("red_path.png")
-
+        print("trip no. " + str(i) + "\n", trip.path.list_of_nodes , "\n\n")
+new_run.way_map.save_as_png("black_test.png")
 
 # new_map = drogi.WayMap((51.2412000, 22.5079000, 51.2470000, 22.5115000))
 # new_map.save_as_png("newwaymap.png")
