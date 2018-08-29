@@ -7,13 +7,16 @@ import overpass
 import psycopg2
 import re
 import json
+import os
+import os.path
+import time
+import datetime
 
 from shapely.geometry import LineString, MultiLineString
 # from skimage import feature
 from networkx.algorithms.shortest_paths.astar import astar_path
 from networkx import Graph
 from networkx.exception import NetworkXNoPath
-from datetime import datetime
 from math import sqrt
 
 from .osmhandler import *
@@ -39,15 +42,29 @@ class WayMap:
         self.minlon = self.bounds_to_fetch[1]
         self.maxlat = self.bounds_to_fetch[2]
         self.maxlon = self.bounds_to_fetch[3]
-        if filename is None:
-            filename = self.area + str(datetime.now()).replace(" ", "_") + ".osm"
-        api = overpass.API(timeout=600)
-        map_query = overpass.MapQuery(self.minlat, self.minlon, self.maxlat, self.maxlon)
-        response = api.get(map_query, responseformat="xml")
-        with open(filename, "w") as f:
-            f.write(response)
-        self.handler = OSMHandler(filename)
-        self.handler.apply_file(filename, locations=True)
+        self.filename_to_use = filename
+        self.oldfile_name = None
+        for existing_file in os.listdir(os.getcwd()):
+            if existing_file.startswith(self.area):
+                cached_extract_mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(existing_file))
+                if (datetime.datetime.utcnow() - cached_extract_mtime <
+                        datetime.timedelta(days=7)):
+                    self.filename_to_use = existing_file
+                else:
+                    self.oldfile_name = existing_file
+        print(self.filename_to_use)
+        if self.filename_to_use is None:
+            # if self.oldfile_name:
+            #     os.remove(self.oldfile_name)
+            self.filename_to_use = self.area + str(datetime.datetime.utcnow()).replace(" ", "_") + ".osm"
+            api = overpass.API(timeout=600)
+            map_query = overpass.MapQuery(self.minlat, self.minlon,
+                                          self.maxlat, self.maxlon)
+            response = api.get(map_query, responseformat="xml")
+            with open(self.filename_to_use, "w") as f:
+                f.write(response)
+        self.handler = OSMHandler(self.filename_to_use)
+        self.handler.apply_file(self.filename_to_use, locations=True)
         self.way_list = self.handler.way_list
         self.bounds = (self.minlat, self.minlon, self.maxlat, self.maxlon)
         self.graph = Graph(WayGraph(self.way_list))
@@ -124,7 +141,7 @@ class WorkRun():
         self.way_map = WayMap(self.area)
         self.list_of_trips = []
 
-        self.table_name = str(datetime.now()).replace(" ", "") # + "_" + str(bounds).replace(" ", "")
+        self.table_name = str(datetime.datetime.now()).replace(" ", "") # + "_" + str(bounds).replace(" ", "")
         self.table_name = re.sub("[^0-9]", "", self.table_name)
         self.table_name = "_" + self.table_name
 
