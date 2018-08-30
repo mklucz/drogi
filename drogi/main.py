@@ -19,8 +19,8 @@ from networkx import Graph
 from networkx.exception import NetworkXNoPath
 from math import sqrt
 
-from .osmhandler import *
-from .illustrator import Illustrator
+from .osmhandler import OSMHandler
+
 
 BOUNDS_DICT = {
     "Lublin": (51.1942, 22.4145, 51.3040, 22.6665),
