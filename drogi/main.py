@@ -74,7 +74,7 @@ class WayMap:
         Renders the map and saves it as a png in current working directory
             Args:
                 img_filename(str): filename to save the png as.
-                partial_bounds(4-tuple, optional): 4 points describing the 
+                partial_bounds(4-tuple, optional): 4 points describing the
                     rectangle to be rendered, if None the whole map is rendered.
             Returns:
                 None
@@ -112,6 +112,49 @@ class WayMap:
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
 
+    def render_on_canvas(self, canvas):
+        for e in self.way_list:
+            if e.category == "walkway":
+                canvas.subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
+            elif e.category == "crossing":
+                canvas.subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
+            elif e.category == "steps":
+                canvas.subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)        
+
+class Canvas():
+    """An object representing a canvas on which to visualize spatial data.
+    I.e. a representation of a  stretch of land on which you can draw the roads
+    themselves, trips taken on these roads, areas of interest and so on."""
+    def __init__(self, bounds):
+        """
+        Prepares a pyplot figure by removing all the margins, padding, axis,
+        ticks, labels etc.
+        Args:
+            bounds(4-tuple): 4 points describing the rectangle to be rendered.
+        """
+        if not isinstance(bounds, tuple) or len(bounds) != 4:
+            raise AttributeError("partial_bounds must be a 4-tuple")
+        minlat, maxlat = bounds[0], bounds[2]
+        minlon, maxlon = bounds[1], bounds[3]
+        size = ((maxlon - minlon) * 400, (maxlat - minlat) * 400)
+        self.fig = plt.figure(frameon=False, figsize=size)
+        self.subplot = self.fig.add_subplot(111)
+        self.fig.subplots_adjust(bottom=0)
+        self.fig.subplots_adjust(top=1)
+        self.fig.subplots_adjust(right=1)
+        self.fig.subplots_adjust(left=0)
+        self.subplot.set_xlim((minlon, maxlon))
+        self.subplot.set_ylim((minlat, maxlat))
+        self.subplot.axis("off")
+        self.subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False,
+                            labelleft=False, labeltop=False, labelright=False, labelbottom=False,
+                            length=0, width=0, pad=0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+    def save(self, img_filename):
+        plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
+        
 
 class WorkRun():
     """Runs a set of simulations"""

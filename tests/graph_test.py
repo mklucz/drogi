@@ -12,21 +12,25 @@ import matplotlib.cbook
 warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
 
 new_run = drogi.WorkRun("small_test", num_of_trips=10)
-for trip in new_run.list_of_trips:
-    if trip.is_traversible:
-        the_path = shg.LineString(trip.path.list_of_nodes)
-        straight_line = shg.LineString([trip.path.start, trip.path.end])
-        polygons = list(sho.polygonize([the_path, straight_line]))
-        if polygons:
-            x, y = polygons[0].boundary.xy
-            fig = plt.figure(1, figsize=(5, 5), dpi=90)
-            ax = fig.add_subplot(111)
-            ax.fill(x, y)
-            ax.plot(the_path.xy[0], the_path.xy[1], color="red")
-            ax.plot(straight_line.xy[0], straight_line.xy[1], color="green")
-            fig.show()
-            plt.show()
-            ax.set_title('Polygon Edges')
+my_canvas = drogi.Canvas(new_run.way_map.bounds_to_fetch)
+new_run.way_map.render_on_canvas(my_canvas)
+my_canvas.save("canvas_test.png")
+
+# for trip in new_run.list_of_trips:
+#     if trip.is_traversible:
+#         the_path = shg.LineString(trip.path.list_of_nodes)
+#         straight_line = shg.LineString([trip.path.start, trip.path.end])
+#         polygons = list(sho.polygonize([the_path, straight_line]))
+#         if polygons:
+#             x, y = polygons[0].boundary.xy
+#             fig = plt.figure(1, figsize=(5, 5), dpi=90)
+#             ax = fig.add_subplot(111)
+#             ax.fill(x, y)
+#             ax.plot(the_path.xy[0], the_path.xy[1], color="red")
+#             ax.plot(straight_line.xy[0], straight_line.xy[1], color="green")
+#             fig.show()
+#             plt.show()
+#             ax.set_title('Polygon Edges')
 
             # xrange = [-1, 3]
             # yrange = [-1, 3]
