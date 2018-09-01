@@ -1,6 +1,5 @@
 import osmium
 import shapely.wkb as wkblib
-import xml.etree.ElementTree
 
 
 WALKABLE_TAGS = ["footway", "bridleway", "steps", "path, living_street", "pedestrian",

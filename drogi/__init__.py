@@ -7,4 +7,4 @@ __version__ = "0.0.13"
 __copyright__ = "Copyright Maciej Kluczyński 2018"
 __license__ = 'MIT'
 
-from .main import *
+from .workrun import *
