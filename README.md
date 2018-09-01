@@ -18,7 +18,8 @@ As I mentioned I intend to use this thing to generate data. For that reason I ha
 The WorkRun class is used in the following way:
 ```python
 import drogi
-new_run = drogi.WorkRun(osm_file="sample_osm", num_of_trips=10)
+bounds = (51.210, 22.500, 51.280, 22.605)
+my_run = drogi.WorkRun(bounds, num_of_trips=0)
 ```
 What's happening inside is the walkable ways from the .osm map get converted into `shapely.LineString` objects and then a graph, represented as a dictionary, is built from those. The representation is pretty standard for Python, the following graph:
 
@@ -32,13 +33,51 @@ Becomes:
  'D': ['B', 'C'],
  'E': ['C']}
 ```
-Only instead of strings we're using two-tuples of  `(latitude, longitude)`.
+Only instead of one-letter strings we're using two-tuples of  `(latitude, longitude)`.
 
-#### Finding paths
+#### Visualizing
 
-We then pick two points, randomly for the time being, and using the [networkx](https://github.com/networkx)'s module A\* algorithm find the shortest path between them. It's proved fast enough for the inputs I've been playing with, especially compared to the previous implementation, which was a simple `numpy.ndarray` of ones and zeros, also traversed using A\*.
-The paths are saved as `Path` objects and among other things, can be used to render a picture like this:
+To see the graph visualized we draw it on a canvas, represented by an instance of the `Canvas` class. The following calls:
+```python
+my_canvas = drogi.Canvas(bounds)
+my_run.way_map.render_on_canvas(my_canvas,
+                                 color="black",
+                                 aa=True,
+                                 linewidth=0.7,
+                                 alpha=1)
+my_canvas.save("lublin_small.png", dpi=150)
+```
+Result in the following image being created:
 
-![rendered paths](img/255_overlaid.png)
+![lublin_small](img/lublin_small.png)
 
-To be perfectly honest this is from a previous version and it's using legacy functions that I've since deleted, but it looks pretty so I'm keeping it ;)
+#### Walking the graph
+
+Let's make a new WorkRun, this time with some trips going through the area, and a fresh canvas.
+
+```python
+new_run = drogi.WorkRun(bounds, num_of_trips=100)
+new_canvas = drogi.Canvas(bounds)
+```
+To get some sense of which walkways are more popular than the others we can draw them semi-opaque on top of one another. We'll also tweak the lines so they appear a bit lighter. You can customize it a fair bit as `render_on_canvas` functions use matplotlib's [Line2D](https://matplotlib.org/api/_as_gen/matplotlib.lines.Line2D.html) objects.
+```python
+new_run.way_map.render_on_canvas(new_canvas,
+                                 color="black",
+                                 aa=True,
+                                 linewidth=0.7,
+                                 alpha=0.5)
+for trip in new_run.list_of_trips:
+    trip.path.render_on_canvas(new_canvas,
+                               color="red",
+                               aa=True,
+                               linewidth=1,
+                               alpha=0.1)
+new_canvas.save("lublin_with_paths.png", dpi=150)
+```
+The result will look something like this:
+
+![lublin_with_paths](img/lublin_with_paths.png)
+
+I say "something like this" because origins and destinations of each journey are picked at random, so each run is potentially unique.
+
+#### Finding obstacles

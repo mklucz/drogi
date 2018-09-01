@@ -28,7 +28,7 @@ class WayMap:
         self.filename_to_use = filename
         self.oldfile_name = None
         for existing_file in os.listdir(os.getcwd()):
-            if existing_file.startswith(self.area):
+            if existing_file.startswith(self.area) and existing_file.endswith(".osm"):
                 cached_extract_mtime = \
                     datetime.datetime.utcfromtimestamp(
                         os.path.getmtime(existing_file))
@@ -37,7 +37,6 @@ class WayMap:
                     self.filename_to_use = existing_file
                 else:
                     self.oldfile_name = existing_file
-        print(self.filename_to_use)
         if self.filename_to_use is None:
             # if self.oldfile_name:
             #     os.remove(self.oldfile_name)

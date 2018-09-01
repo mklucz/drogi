@@ -52,10 +52,6 @@ class WorkRun:
                                          );""")
         cur.execute(creating_query % self.table_name)
         conn.commit()
-        # cur.execute("""SELECT table_name FROM information_schema.tables
-        #                WHERE table_schema = 'public'""")
-        # for table in cur.fetchall():
-        #     print(table)
 
         self.points_list = list(self.way_map.graph)
         if len(self.points_list) < 2:
@@ -133,5 +129,5 @@ class Canvas:
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
-    def save(self, img_filename):
-        plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
+    def save(self, img_filename, **kwargs):
+        plt.savefig(img_filename, bbox_inches="tight", pad_inches=0, **kwargs)

@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="drogi",
-    version="0.0.13",
+    version="0.0.14",
     author="Maciej Kluczyński",
     author_email="maciej.lukasz.kluczynski@gmail.com",
     description="Tool for analysing urban moveability.",
