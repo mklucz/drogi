@@ -28,10 +28,19 @@ class Path(LineString):
         self.start = start
         self.end = end
         try:
-            self.list_of_nodes = astar_path(self.way_map.graph, self.start, self.end)
+            self.list_of_nodes = astar_path(self.way_map.graph,
+                                            self.start,
+                                            self.end)
         except NetworkXNoPath:
             self.list_of_nodes = []
-        self.straightline_length = self.straightline_distance(self.start, self.end)
+        self.straightline_length = self.straightline_distance(self.start,
+                                                              self.end)
+
+    def render_on_canvas(self, canvas, **kwargs):
+        x_list = [p[0] for p in self.list_of_nodes]
+        y_list = [p[1] for p in self.list_of_nodes]
+        canvas.subplot.plot(x_list, y_list, **kwargs)
+
 
     def save_as_png(self, img_filename):
         partial_bounds = self.way_map.bounds
@@ -61,3 +70,8 @@ class Path(LineString):
         x_dist = abs(p1[0] - p2[0])
         y_dist = abs(p1[1] - p2[1])
         return sqrt(x_dist**2 + y_dist**2)
+
+def kwarg_print(**kwargs):
+    for arg in kwargs:
+        print("\n")
+        print(arg)

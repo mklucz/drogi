@@ -9,11 +9,21 @@ from matplotlib import pyplot as plt
 # 51.2452000, 22.5079000, 51.2510000, 22.5135000)
 import warnings
 import matplotlib.cbook
-warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
 
-new_run = drogi.WorkRun("small_test", num_of_trips=10)
+new_run = drogi.WorkRun("small_test", num_of_trips=100)
 my_canvas = drogi.Canvas(new_run.way_map.bounds_to_fetch)
-new_run.way_map.render_on_canvas(my_canvas)
+new_run.way_map.render_on_canvas(my_canvas,
+                                 color="green",
+                                 aa=False,
+                                 linewidth=0.1,
+                                 alpha=0.5)
+for trip in new_run.list_of_trips:
+    trip.path.render_on_canvas(my_canvas,
+                                 color="red",
+                                 aa=False,
+                                 linewidth=0.1,
+                                 alpha=0.2)
 my_canvas.save("canvas_test.png")
 
 # for trip in new_run.list_of_trips:

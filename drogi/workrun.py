@@ -10,7 +10,7 @@ from .data import BOUNDS_DICT
 from .trip import Trip, Path
         
 
-class WorkRun():
+class WorkRun:
     """Runs a set of simulations"""
     def __init__(self,
                  area,
@@ -72,18 +72,22 @@ class WorkRun():
         max_radius = self.max_radius_of_trip
         while True:
             end_candidate = random.choice(self.points_list)
-            if end_candidate != start and Path.straightline_distance(None, start, end_candidate) < max_radius:
-                return end_candidate
+            if end_candidate != start:
+                if Path.straightline_distance(None, start, end_candidate) \
+                        < max_radius:
+                    return end_candidate
 
     def insert_trip_into_db(self, trip):
-        conn = psycopg2.connect("dbname=" + self.dbname + " user=" + self.dbuser)
+        conn = psycopg2.connect("dbname=" + self.dbname +
+                                " user=" + self.dbuser)
         cur = conn.cursor()
         inserting_query = """INSERT INTO %s(start, "end", "path")
                            VALUES ('%s', '%s', '%s');"""
-        cur.execute(inserting_query % (self.table_name,
-                                       str(list(trip.start)).replace('[', '{').replace(']', '}'),
-                                       str(list(trip.end)).replace('[', '{').replace(']', '}'),
-                                       json.dumps(trip.path.list_of_nodes)))
+        cur.execute(inserting_query %
+                    (self.table_name,
+                     str(list(trip.start)).replace('[', '{').replace(']', '}'),
+                     str(list(trip.end)).replace('[', '{').replace(']', '}'),
+                     json.dumps(trip.path.list_of_nodes)))
         conn.commit()
         conn.close()
 
@@ -131,5 +135,3 @@ class Canvas:
 
     def save(self, img_filename):
         plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
-
-

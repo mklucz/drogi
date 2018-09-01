@@ -10,7 +10,8 @@ from .data import BOUNDS_DICT
 
 
 class WayMap:
-    """Contains GIS-type data describing physical layout of ways in a particular area"""
+    """Contains GIS-type data describing physical layout of ways in a particular
+    area."""
 
     def __init__(self, area, filename=None):
         """
@@ -28,7 +29,9 @@ class WayMap:
         self.oldfile_name = None
         for existing_file in os.listdir(os.getcwd()):
             if existing_file.startswith(self.area):
-                cached_extract_mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(existing_file))
+                cached_extract_mtime = \
+                    datetime.datetime.utcfromtimestamp(
+                        os.path.getmtime(existing_file))
                 if (datetime.datetime.utcnow() - cached_extract_mtime <
                         datetime.timedelta(days=7)):
                     self.filename_to_use = existing_file
@@ -38,7 +41,8 @@ class WayMap:
         if self.filename_to_use is None:
             # if self.oldfile_name:
             #     os.remove(self.oldfile_name)
-            self.filename_to_use = self.area + str(datetime.datetime.utcnow()).replace(" ", "_") + ".osm"
+            curr_time = str(datetime.datetime.utcnow()).replace(" ", "_")
+            self.filename_to_use = self.area + curr_time + ".osm"
             api = overpass.API(timeout=600)
             map_query = overpass.MapQuery(self.minlat, self.minlon,
                                           self.maxlat, self.maxlon)
@@ -94,18 +98,35 @@ class WayMap:
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
 
-    def render_on_canvas(self, canvas):
+    def render_on_canvas(self, canvas, **kwargs):
+        """
+        Renders the waymap on given canvas.
+        Args:
+            canvas: a Canvas object.
+            **kwargs: arguments to pass to pyplot's plot function. Refer to
+                https://matplotlib.org/api/_as_gen/matplotlib.lines.Line2D.html
+                for the full list of possible arguments.
+
+        Returns:
+            None
+        """
         for e in self.way_list:
             if e.category == "walkway":
-                canvas.subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
+                canvas.subplot.plot(list(e.line.xy[0]),
+                                    list(e.line.xy[1]),
+                                    **kwargs)
             elif e.category == "crossing":
-                canvas.subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
+                canvas.subplot.plot(list(e.line.xy[0]),
+                                    list(e.line.xy[1]),
+                                    **kwargs)
             elif e.category == "steps":
-                canvas.subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)        
+                canvas.subplot.plot(list(e.line.xy[0]),
+                                    list(e.line.xy[1]),
+                                    **kwargs)
 
 
 class WayGraph(dict):
-    """docstring for WayGraph"""
+    """Graph representation for pathfinding."""
     def __init__(self, way_list):
         super(WayGraph, self).__init__()
         self.way_list = way_list
