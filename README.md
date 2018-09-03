@@ -81,3 +81,5 @@ The result will look something like this:
 I say "something like this" because origins and destinations of each journey are picked at random, so each run is potentially unique.
 
 #### Finding obstacles
+
+Now let's say we'd want to know the areas, which are the biggest offenders in terms of decreasing walkability of the neighbourhood. Such an area could be a river, an unpassable highway or a large factory. This can be achieved by taking a closer look on the `Obstacle` class, instances of which are kept in each `Path` object.

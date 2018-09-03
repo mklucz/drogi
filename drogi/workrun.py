@@ -27,7 +27,10 @@ class WorkRun:
         saving the paths in a postgres database.
         """
         self.area = area
-        self.bounds = BOUNDS_DICT[self.area]
+        if self.area.is_instance("string"):
+            self.bounds = BOUNDS_DICT[self.area]
+        else:
+            self.bounds = self.area
         self.num_of_trips = num_of_trips
         self.origin_choice = origin_choice
         self.destination_choice = destination_choice
