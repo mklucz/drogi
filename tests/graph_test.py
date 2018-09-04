@@ -13,9 +13,8 @@ import matplotlib.cbook
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
 #
 
-new_york = (40.6979, -74.0427, 40.7483, -73.9449)
-my_run = drogi.WorkRun()
-my_canvas = drogi.Canvas(new_york)
+my_run = drogi.WorkRun("new_york")
+my_canvas = drogi.Canvas(my_run.way_map.bounds_to_fetch)
 my_run.way_map.render_on_canvas(my_canvas,
                                  color="black",
                                  aa=True,

@@ -27,10 +27,14 @@ class WorkRun:
         saving the paths in a postgres database.
         """
         self.area = area
-        if self.area.is_instance("string"):
-            self.bounds = BOUNDS_DICT[self.area]
-        else:
+        if isinstance(self.area, tuple) and len(self.area) == 4:
             self.bounds = self.area
+        else:
+            try:
+                self.bounds = BOUNDS_DICT[self.area]
+            except (KeyError, TypeError):
+                raise AttributeError(
+                    "area must be a 4-tuple or a BOUNDS_DICT key")
         self.num_of_trips = num_of_trips
         self.origin_choice = origin_choice
         self.destination_choice = destination_choice
