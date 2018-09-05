@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-
 from math import sqrt
 from networkx.algorithms.shortest_paths.astar import astar_path
 from networkx.exception import NetworkXNoPath
@@ -20,10 +18,9 @@ class Trip:
             self.is_traversible = False
 
 
-class Path():
+class Path:
     """docstring for Path"""
     def __init__(self, way_map, start, end):
-        super(Path, self).__init__()
         self.way_map = way_map
         self.start = start
         self.end = end
@@ -34,9 +31,11 @@ class Path():
         except NetworkXNoPath:
             self.list_of_nodes = []
         self.linestring = LineString(self.list_of_nodes)
-        self.straightline_length = self.straightline_distance(self.start,
+        self.straightline_length = Path.straightline_distance(self.start,
                                                               self.end)
         self.straightline = LineString([self.start, self.end])
+        self.deviation_factor = (self.linestring.length /
+                                 self.straightline_length)
         self.obstacles = []
         for polygon in list(polygonize([self.linestring,
                                         self.straightline])):
@@ -45,16 +44,17 @@ class Path():
                                            self.end,
                                            polygon))
 
-
     def render_on_canvas(self, canvas, **kwargs):
         x_list = [p[0] for p in self.list_of_nodes]
         y_list = [p[1] for p in self.list_of_nodes]
         canvas.subplot.plot(x_list, y_list, **kwargs)
 
-    def straightline_distance(self, p1, p2):
+    @staticmethod
+    def straightline_distance(p1, p2):
         x_dist = abs(p1[0] - p2[0])
         y_dist = abs(p1[1] - p2[1])
         return sqrt(x_dist**2 + y_dist**2)
+
 
 class Obstacle:
     """Represents anything that causes a path to deviate from straight line."""

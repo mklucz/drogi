@@ -76,7 +76,7 @@ class WorkRun:
         while True:
             end_candidate = random.choice(self.points_list)
             if end_candidate != start:
-                if Path.straightline_distance(None, start, end_candidate) \
+                if Path.straightline_distance(start, end_candidate) \
                         < max_radius:
                     return end_candidate
 

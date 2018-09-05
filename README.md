@@ -31,11 +31,11 @@ What's happening inside is the walkable ways from the .osm map get converted int
 
 Becomes:
 ```python
-{'A': ['B', 'C'],
- 'B': ['A', 'C', 'D'],
- 'C': ['A', 'B', 'D', 'E'],
- 'D': ['B', 'C'],
- 'E': ['C']}
+graph = {'A': ['B', 'C'],
+         'B': ['A', 'C', 'D'],
+         'C': ['A', 'B', 'D', 'E'],
+         'D': ['B', 'C'],
+         'E': ['C']}
 ```
 Only instead of one-letter strings we're using two-tuples of  `(latitude, longitude)`.
 
@@ -127,4 +127,4 @@ With this, we can start to draw some serious conclusions.
 
 #### Coming up in the next version
 * Rating obstacles on how much deviation they force.
-* Fix to random destination choosing, now it's basically bruteforce.
+* A fix to random destination choosing, now it's basically bruteforce.
