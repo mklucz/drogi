@@ -18,7 +18,7 @@ class WorkRun:
                  origin_choice="random",
                  destination_choice="random",
                  allowed_means_of_transport="walking",
-                 max_radius_of_trip=0.01,
+                 max_trip_radius=0.01,
                  dbname="thirdtest",
                  dbuser="mklucz"):
         """
@@ -39,7 +39,7 @@ class WorkRun:
         self.origin_choice = origin_choice
         self.destination_choice = destination_choice
         self.allowed_means_of_transport = allowed_means_of_transport
-        self.max_radius_of_trip = max_radius_of_trip
+        self.max_trip_radius = max_trip_radius
         self.dbname = dbname
         self.dbuser = dbuser
         self.way_map = WayMap(self.area)
@@ -72,7 +72,7 @@ class WorkRun:
             self.insert_trip_into_db(new_trip)
 
     def find_random_destination_inside_radius(self, start):
-        max_radius = self.max_radius_of_trip
+        max_radius = self.max_trip_radius
         while True:
             end_candidate = random.choice(self.points_list)
             if end_candidate != start:

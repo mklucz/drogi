@@ -54,49 +54,6 @@ class WayMap:
         self.bounds = (self.minlat, self.minlon, self.maxlat, self.maxlon)
         self.graph = Graph(WayGraph(self.way_list))
 
-    def save_as_png(self, img_filename, partial_bounds=None):
-        """
-        Renders the map and saves it as a png in current working directory
-            Args:
-                img_filename(str): filename to save the png as.
-                partial_bounds(4-tuple, optional): 4 points describing the
-                    rectangle to be rendered, if None the whole map is rendered.
-            Returns:
-                None
-        """
-        if partial_bounds is None:
-            partial_bounds = self.bounds
-        if not isinstance(partial_bounds, tuple) or len(partial_bounds) != 4:
-            raise AttributeError("partial_bounds must be a 4-tuple")
-        p_minlat, p_maxlat = partial_bounds[0], partial_bounds[2]
-        p_minlon, p_maxlon = partial_bounds[1], partial_bounds[3]
-        if (p_minlon < self.minlon or p_maxlon > self.maxlon or
-                p_minlat < self.minlat or p_maxlat > self.maxlat):
-            raise ValueError("partial_bounds out of WayMap's bounds")
-        size = ((p_maxlon - p_minlon) * 400, (p_maxlat - p_minlat) * 400)
-        fig = plt.figure(frameon=False, figsize=size)
-        subplot = fig.add_subplot(111)
-        fig.subplots_adjust(bottom=0)
-        fig.subplots_adjust(top=1)
-        fig.subplots_adjust(right=1)
-        fig.subplots_adjust(left=0)
-        subplot.set_xlim((p_minlon, p_maxlon))
-        subplot.set_ylim((p_minlat, p_maxlat))
-        subplot.axis("off")
-        subplot.tick_params(axis="both", which="both", left=False, top=False, right=False, bottom=False,
-                            labelleft=False, labeltop=False, labelright=False, labelbottom=False,
-                            length=0, width=0, pad=0)
-        for e in self.way_list:
-            if e.category == "walkway":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
-            elif e.category == "crossing":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
-            elif e.category == "steps":
-                subplot.plot(list(e.line.xy[0]), list(e.line.xy[1]), color="black", aa=False, linewidth=0.1)
-        plt.gca().xaxis.set_major_locator(plt.NullLocator())
-        plt.gca().yaxis.set_major_locator(plt.NullLocator())
-        plt.savefig(img_filename, dpi=100, bbox_inches="tight", pad_inches=0)
-
     def render_on_canvas(self, canvas, **kwargs):
         """
         Renders the waymap on given canvas.
@@ -153,3 +110,18 @@ class WayGraph(dict):
                     else:
                         self[xy].append((x[i + 1], y[i + 1]))
                         self[xy].append((x[i - 1], y[i - 1]))
+
+
+class DestinationChooserAid:
+    """Helper object to speed up random destination choosing."""
+    def __init__(self, way_map, max_trip_radius):
+        """
+
+        Args:
+            way_map:
+            max_trip_radius:
+        """
+        self.way_map = way_map
+        self.max_trip_radius = max_trip_radius
+        self.vertical_strech = abs(self.way_map.minlat - self.way_map.maxlat)
+        self.horizontal_strech = abs(self.way_map.minlon - self.way_map.maxlon)
