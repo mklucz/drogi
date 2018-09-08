@@ -1,11 +1,10 @@
 import os
 import datetime
 import overpass
-import matplotlib.pyplot as plt
 
 from networkx import Graph
 
-from .osmhandler import OSMHandler
+from .osm_handler import OSMHandler
 from .data import BOUNDS_DICT
 
 
@@ -110,18 +109,3 @@ class WayGraph(dict):
                     else:
                         self[xy].append((x[i + 1], y[i + 1]))
                         self[xy].append((x[i - 1], y[i - 1]))
-
-
-class DestinationChooserAid:
-    """Helper object to speed up random destination choosing."""
-    def __init__(self, way_map, max_trip_radius):
-        """
-
-        Args:
-            way_map:
-            max_trip_radius:
-        """
-        self.way_map = way_map
-        self.max_trip_radius = max_trip_radius
-        self.vertical_strech = abs(self.way_map.minlat - self.way_map.maxlat)
-        self.horizontal_strech = abs(self.way_map.minlon - self.way_map.maxlon)

@@ -121,10 +121,9 @@ my_canvas.save("bigger_test.png")
 ```
 And after 45 minutes on a single core, behold:
 
-![bigger_test](img/bigger_test.png)
+![bigger_test](img/20k_test2018-09-08_17:40:16.724652.png)
 
 With this, we can start to draw some serious conclusions.
 
 #### Coming up in the next version
-* Rating obstacles on how much deviation they force.
-* A fix to random destination choosing, now it's basically bruteforce.
+* Walking between places of interest, instead of random points

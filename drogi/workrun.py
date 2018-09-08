@@ -8,6 +8,7 @@ import datetime
 from .waymap import WayMap
 from .data import BOUNDS_DICT
 from .trip import Trip, Path
+from .destination_chooser import DestinationChooserAid
         
 
 class WorkRun:
@@ -63,22 +64,24 @@ class WorkRun:
         self.points_list = list(self.way_map.graph)
         if len(self.points_list) < 2:
             raise ValueError("Not enough points on map")
+        self.dest_chooser_aid = DestinationChooserAid(self.way_map,
+                                                      self.points_list,
+                                                      self.max_trip_radius)
+        self.points_list = self.dest_chooser_aid.trimmed_points_list
 
         for trip in range(self.num_of_trips):
+            if trip % 100 == 0:
+                print(trip, datetime.datetime.now())
             start = random.choice(self.points_list)
-            end = self.find_random_destination_inside_radius(start)
-            new_trip = Trip(self.way_map, start, end)
+            end = self.dest_chooser_aid.find_random_destination(start)
+            if start == end:
+                continue
+            try:
+                new_trip = Trip(self.way_map, start, end)
+            except (ValueError, AttributeError):
+                continue
             self.list_of_trips.append(new_trip)
             self.insert_trip_into_db(new_trip)
-
-    def find_random_destination_inside_radius(self, start):
-        max_radius = self.max_trip_radius
-        while True:
-            end_candidate = random.choice(self.points_list)
-            if end_candidate != start:
-                if Path.straightline_distance(start, end_candidate) \
-                        < max_radius:
-                    return end_candidate
 
     def insert_trip_into_db(self, trip):
         conn = psycopg2.connect("dbname=" + self.dbname +
