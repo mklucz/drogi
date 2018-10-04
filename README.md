@@ -125,5 +125,7 @@ And after 45 minutes on a single core, behold:
 
 With this, we can start to draw some serious conclusions.
 
-#### Coming up in the next version
+#### Coming up in future versions:
 * Walking between places of interest, instead of random points
+* Layered canvas rendering
+* CLI interface through the argparse module

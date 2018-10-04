@@ -34,7 +34,7 @@ for trip in my_run.list_of_trips:
                                   linewidth=0,
                                   edgecolor=None)
 
-my_canvas.save("lublin_dev_factor2.png", dpi=150)
+my_canvas.save("lublin_dev_factor5.png", dpi=150)
 # print(datetime.datetime.now())
 # new_run = drogi.WorkRun("bigger_test", num_of_trips=20000)
 # print(datetime.datetime.now())

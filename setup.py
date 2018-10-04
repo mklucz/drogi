@@ -6,14 +6,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="drogi",
-    version="0.0.14",
+    version="0.0.15",
     author="Maciej Kluczyński",
     author_email="maciej.lukasz.kluczynski@gmail.com",
     description="Tool for analysing urban moveability.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mklucz/drogi",
-    packages=setuptools.find_packages()#,
+    packages=setuptools.find_packages(),
     # install_requires=[
     #     "matplotlib",
     #     "pypng",

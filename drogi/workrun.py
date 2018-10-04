@@ -49,7 +49,23 @@ class WorkRun:
         self.table_name = str(datetime.datetime.now()).replace(" ", "")
         self.table_name = re.sub("[^0-9]", "", self.table_name)
         self.table_name = "_" + self.table_name
+        self.points_list = list(self.way_map.graph)
 
+        self.create_db_table()
+        self.create_dest_chooser_aid()
+        self.run_trips()
+
+    def create_dest_chooser_aid(self):
+
+        if len(self.points_list) < 2:
+            raise ValueError("Not enough points on map")
+        self.dest_chooser_aid = DestinationChooserAid(self.way_map,
+                                                      self.points_list,
+                                                      self.max_trip_radius)
+        self.points_list = self.dest_chooser_aid.trimmed_points_list
+
+
+    def create_db_table(self):
         conn = psycopg2.connect("dbname=" + self.dbname +
                                 " user=" + self.dbuser)
         cur = conn.cursor()
@@ -61,14 +77,7 @@ class WorkRun:
         cur.execute(creating_query % self.table_name)
         conn.commit()
 
-        self.points_list = list(self.way_map.graph)
-        if len(self.points_list) < 2:
-            raise ValueError("Not enough points on map")
-        self.dest_chooser_aid = DestinationChooserAid(self.way_map,
-                                                      self.points_list,
-                                                      self.max_trip_radius)
-        self.points_list = self.dest_chooser_aid.trimmed_points_list
-
+    def run_trips(self):
         for trip in range(self.num_of_trips):
             if trip % 100 == 0:
                 print(trip, datetime.datetime.now())
