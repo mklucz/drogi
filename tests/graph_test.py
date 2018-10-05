@@ -13,13 +13,16 @@ import datetime
 # warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
 #
 
-my_run = drogi.WorkRun("lublin_small", num_of_trips=1000)
+my_run = drogi.WorkRun("lublin_small",
+                       num_of_trips=200,
+                       db_name="thirdtest",
+                       db_user="mklucz")
 my_canvas = drogi.Canvas(my_run.way_map.bounds_to_fetch)
 my_run.way_map.render_on_canvas(my_canvas,
-                                 color="black",
-                                 aa=True,
-                                 linewidth=0.5,
-                                 alpha=0.5)
+                                color="black",
+                                aa=True,
+                                linewidth=0.5,
+                                alpha=0.5)
 for trip in my_run.list_of_trips:
     dev_factor = trip.path.deviation_factor
     trip.path.render_on_canvas(my_canvas,
@@ -34,7 +37,7 @@ for trip in my_run.list_of_trips:
                                   linewidth=0,
                                   edgecolor=None)
 
-my_canvas.save("lublin_dev_factor5.png", dpi=150)
+my_canvas.save("lublin_dev_factor6.png", dpi=150)
 # print(datetime.datetime.now())
 # new_run = drogi.WorkRun("bigger_test", num_of_trips=20000)
 # print(datetime.datetime.now())

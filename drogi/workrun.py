@@ -20,8 +20,8 @@ class WorkRun:
                  destination_choice="random",
                  allowed_means_of_transport="walking",
                  max_trip_radius=0.01,
-                 dbname="thirdtest",
-                 dbuser="mklucz"):
+                 db_name=None,
+                 db_user=None):
         """
         Top level class that conducts the simulations by getting the data, 
         turning it into a pathfind-able form, traversing it repeatedly and 
@@ -41,41 +41,43 @@ class WorkRun:
         self.destination_choice = destination_choice
         self.allowed_means_of_transport = allowed_means_of_transport
         self.max_trip_radius = max_trip_radius
-        self.dbname = dbname
-        self.dbuser = dbuser
         self.way_map = WayMap(self.area)
         self.list_of_trips = []
-
-        self.table_name = str(datetime.datetime.now()).replace(" ", "")
-        self.table_name = re.sub("[^0-9]", "", self.table_name)
-        self.table_name = "_" + self.table_name
         self.points_list = list(self.way_map.graph)
+        self.dest_chooser_aid = self.create_destination_chooser_aid()
 
-        self.create_db_table()
-        self.create_dest_chooser_aid()
+        self.db_name = db_name
+        self.db_user = db_user
+        if self.db_name and self.db_user:
+            self.feed_db = True
+            self.db_connection = psycopg2.connect("dbname=" + self.db_name +
+                                                  " user=" + self.db_user)
+            self.table_name = str(datetime.datetime.now()).replace(" ", "")
+            self.table_name = re.sub("[^0-9]", "", self.table_name)
+            self.table_name = "_" + self.table_name
+            self.create_db_table(self.db_connection)
+        else:
+            self.feed_db = False
+
         self.run_trips()
 
-    def create_dest_chooser_aid(self):
-
+    def create_destination_chooser_aid(self):
         if len(self.points_list) < 2:
             raise ValueError("Not enough points on map")
-        self.dest_chooser_aid = DestinationChooserAid(self.way_map,
-                                                      self.points_list,
-                                                      self.max_trip_radius)
-        self.points_list = self.dest_chooser_aid.trimmed_points_list
+        dest_chooser_aid = DestinationChooserAid(self.way_map,
+                                                 self.points_list,
+                                                 self.max_trip_radius)
+        self.points_list = dest_chooser_aid.trimmed_points_list
+        return dest_chooser_aid
 
-
-    def create_db_table(self):
-        conn = psycopg2.connect("dbname=" + self.dbname +
-                                " user=" + self.dbuser)
-        cur = conn.cursor()
+    def create_db_table(self, db_connection):
         creating_query = ("""CREATE TABLE %s (id serial NOT NULL PRIMARY KEY, 
                                         "start" numeric ARRAY[2],
                                         "end" numeric ARRAY[2],
                                         "path" json
                                          );""")
-        cur.execute(creating_query % self.table_name)
-        conn.commit()
+        db_connection.cursor().execute(creating_query % self.table_name)
+        db_connection.commit()
 
     def run_trips(self):
         for trip in range(self.num_of_trips):
@@ -90,21 +92,19 @@ class WorkRun:
             except (ValueError, AttributeError):
                 continue
             self.list_of_trips.append(new_trip)
-            self.insert_trip_into_db(new_trip)
+            if self.feed_db:
+                self.insert_trip_into_db(new_trip, self.db_connection)
 
-    def insert_trip_into_db(self, trip):
-        conn = psycopg2.connect("dbname=" + self.dbname +
-                                " user=" + self.dbuser)
-        cur = conn.cursor()
+    def insert_trip_into_db(self, trip, db_connection):
         inserting_query = """INSERT INTO %s(start, "end", "path")
                            VALUES ('%s', '%s', '%s');"""
-        cur.execute(inserting_query %
+        db_connection.cursor().execute(
+                    inserting_query %
                     (self.table_name,
                      str(list(trip.start)).replace('[', '{').replace(']', '}'),
                      str(list(trip.end)).replace('[', '{').replace(']', '}'),
                      json.dumps(trip.path.list_of_nodes)))
-        conn.commit()
-        conn.close()
+        db_connection.commit()
 
 
 class Canvas:
