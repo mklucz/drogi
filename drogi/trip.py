@@ -6,8 +6,14 @@ from shapely.ops import polygonize
 
 
 class Trip:
-    """docstring for Trip"""
+    """Represents an entire A-to-B trip on a given WayMap."""
     def __init__(self, way_map, start, end):
+        """
+        Args:
+            way_map(WayMap): the map the trip takes place on
+            start(2-tuple): starting point
+            end(2-tuple): destination
+        """
         self.way_map = way_map
         self.start = start
         self.end = end
@@ -19,8 +25,14 @@ class Trip:
 
 
 class Path:
-    """docstring for Path"""
+    """A leg of a trip, travelled using a single mode of transport."""
     def __init__(self, way_map, start, end):
+        """
+        Args:
+            way_map(WayMap): the map the trip takes place on
+            start(2-tuple): starting point
+            end(2-tuple): destination
+        """
         self.way_map = way_map
         self.start = start
         self.end = end

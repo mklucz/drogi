@@ -107,7 +107,7 @@ class Canvas:
     """An object representing a canvas on which to visualize spatial data.
     I.e. a representation of a  stretch of land on which you can draw the roads
     themselves, trips taken on these roads, areas of interest and so on."""
-    def __init__(self, bounds):
+    def __init__(self, bounds, size_factor=400):
         """
         Prepares a pyplot figure by removing all the margins, padding, axis,
         ticks, labels etc.
@@ -118,7 +118,7 @@ class Canvas:
             raise AttributeError("partial_bounds must be a 4-tuple")
         minlat, maxlat = bounds[0], bounds[2]
         minlon, maxlon = bounds[1], bounds[3]
-        size = ((maxlon - minlon) * 400, (maxlat - minlat) * 400)
+        size = ((maxlon - minlon) * size_factor, (maxlat - minlat) * size_factor)
         self.fig = plt.figure(frameon=False, figsize=size)
         self.subplot = self.fig.add_subplot(111)
         self.fig.subplots_adjust(bottom=0)
