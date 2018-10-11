@@ -63,6 +63,14 @@ class WorkRun:
 
         self.run_trips()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        if exc_type is not None:
+            return False
+        return True
+
     def create_destination_chooser_aid(self):
         if len(self.points_list) < 2:
             raise ValueError("Not enough points on map")
