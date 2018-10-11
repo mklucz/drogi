@@ -21,7 +21,8 @@ class WorkRun:
                  allowed_means_of_transport="walking",
                  max_trip_radius=0.01,
                  db_name=None,
-                 db_user=None):
+                 db_user=None,
+                 debug=True):
         """
         Top level class that conducts the simulations by getting the data, 
         turning it into a pathfind-able form, traversing it repeatedly and 
@@ -41,6 +42,7 @@ class WorkRun:
         self.destination_choice = destination_choice
         self.allowed_means_of_transport = allowed_means_of_transport
         self.max_trip_radius = max_trip_radius
+        self.debug = debug
         self.way_map = WayMap(self.area)
         self.list_of_trips = []
         self.points_list = list(self.way_map.graph)
@@ -79,8 +81,9 @@ class WorkRun:
 
     def run_trips(self):
         for trip in range(self.num_of_trips):
-            if trip % 100 == 0:
-                print(trip, datetime.datetime.now())
+            if self.debug:
+                if trip % 100 == 0:
+                    print(trip, datetime.datetime.now())
             start = random.choice(self.points_list)
             end = self.dest_chooser_aid.find_random_destination(start)
             if start == end:
@@ -101,6 +104,7 @@ class WorkRun:
                     (self.table_name,
                      json.dumps(trip.path.list_of_nodes)))
         db_connection.commit()
+
 
 
 class Canvas:

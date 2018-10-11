@@ -6,6 +6,8 @@ from shapely.ops import polygonize
 
 
 class Trip:
+    __slots__ = ("way_map", "start", "end", "path", "is_traversible")
+
     """Represents an entire A-to-B trip on a given WayMap."""
     def __init__(self, way_map, start, end):
         """
@@ -25,6 +27,10 @@ class Trip:
 
 
 class Path:
+    __slots__ = ("way_map", "start", "end", "list_of_nodes", "linestring",
+                 "straightline_length", "straightline", "deviation_factor",
+                 "obstacles")
+
     """A leg of a trip, travelled using a single mode of transport."""
     def __init__(self, way_map, start, end):
         """
@@ -69,6 +75,8 @@ class Path:
 
 
 class Obstacle:
+    __slots__ = ("way_map", "start", "end", "polygon", "area")
+
     """Represents anything that causes a path to deviate from straight line."""
     def __init__(self, way_map, start, end, polygon):
         self.way_map = way_map
