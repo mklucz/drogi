@@ -109,3 +109,15 @@ class WayGraph(dict):
                     else:
                         self[xy].append((x[i + 1], y[i + 1]))
                         self[xy].append((x[i - 1], y[i - 1]))
+
+
+class Bounds:
+    def __init__(self, bounds):
+        self.bounds = bounds
+        self.minlat = bounds[0]
+        self.minlon = bounds[1]
+        self.maxlat = bounds[2]
+        self.maxlon = bounds[3]
+
+    def __repr__(self):
+        return "Bounds({}).".format(str(self.bounds))
