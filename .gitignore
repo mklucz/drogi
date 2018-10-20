@@ -113,3 +113,4 @@ dmypy.json
 .idea/
 drogi.sublime-workspace
 extracts/
+my_tests/
