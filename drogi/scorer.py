@@ -2,6 +2,7 @@ import psycopg2
 
 from math import ceil
 from datetime import datetime
+from collections import namedtuple
 
 from .waymap import Bounds
 
@@ -44,6 +45,9 @@ class ScoreBoard:
             self)
 
 
+TimeSpan = namedtuple("TimeSpan", ("begin", "end"))
+
+
 class Tile:
     def __init__(self, bounds, parentboard):
         self.bounds = bounds
@@ -51,7 +55,11 @@ class Tile:
         self.area_name = self.parentboard.area.name
 
     def fetch_paths_from_db(self, time_span):
-        pass
+        paths = []
+        for table_name in self.fetch_table_names_for_area():
+            if self.table_inside_time_span(table_name, time_span):
+                paths.extend(self.fetch_paths_from_table(table_name))
+        return paths
 
     def fetch_paths_from_table(self, table_name):
         test_query = """SELECT "path" FROM {} WHERE
@@ -90,5 +98,5 @@ class Tile:
     def table_inside_time_span(self, table_name, time_span):
         time_portion = table_name.replace(self.area_name, "")
         time_of_table = datetime.strptime(time_portion, "%Y%m%d%H%M%S")
-        return time_span[0] < time_of_table < time_span[1]
+        return time_span.begin < time_of_table < time_span.end
 
