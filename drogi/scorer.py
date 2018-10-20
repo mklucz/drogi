@@ -6,21 +6,23 @@ from .waymap import Bounds
 
 
 class Scorer:
-    def __init__(self, bounds, db_name, db_user, tile_size=0.001):
-        self.bounds = bounds
+    def __init__(self, area, db_name, db_user, tile_size=0.001):
+        self.area = area
+        self.bounds = self.area.bounds
         self.db_name = db_name
         self.db_user = db_user
         self.tile_size = tile_size
         self.db_conn = psycopg2.connect("dbname=" + self.db_name +
                                         " user=" + self.db_user)
-        self.scoreboard = ScoreBoard(self.db_conn, self.bounds, self.tile_size)
+        self.scoreboard = ScoreBoard(self.area, self.db_conn, self.tile_size)
     pass
 
 
 class ScoreBoard:
-    def __init__(self, db_conn, bounds, tile_size=0.001):
+    def __init__(self, area, db_conn, tile_size=0.001):
+        self.area = area
+        self.bounds = self.area.bounds
         self.db_conn = db_conn
-        self.bounds = bounds
         self.tile_size = tile_size
         self.tiles = self.initialize_tiles()
 
