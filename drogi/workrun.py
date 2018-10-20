@@ -54,9 +54,9 @@ class WorkRun:
             self.feed_db = True
             self.db_connection = psycopg2.connect("dbname=" + self.db_name +
                                                   " user=" + self.db_user)
-            self.table_name = str(datetime.datetime.now()).replace(" ", "")
-            self.table_name = re.sub("[^0-9]", "", self.table_name)
-            self.table_name = self.area + self.table_name
+            now = datetime.datetime.now()
+            time_string = datetime.datetime.strftime(now, "%Y%m%d%H%M%S")
+            self.table_name = self.area + time_string
             self.create_db_table(self.db_connection)
         else:
             self.feed_db = False
