@@ -1,10 +1,17 @@
 import psycopg2
+import numpy as np
 
 from math import ceil
 from datetime import datetime
 from collections import namedtuple
+from shapely.geometry import LineString
 
 from .waymap import Bounds
+
+TimeSpan = namedtuple("TimeSpan", ("begin", "end"))
+
+YEAR_2018 = TimeSpan(begin=datetime.strptime("20180101", "%Y%m%d"),
+                     end=datetime.now())
 
 
 class Scorer:
@@ -21,12 +28,14 @@ class Scorer:
 
 
 class ScoreBoard:
-    def __init__(self, area, db_conn, tile_size=0.001):
+    def __init__(self, area, db_conn, tile_size=0.001, time_span=YEAR_2018):
         self.area = area
         self.bounds = self.area.bounds
         self.db_conn = db_conn
         self.tile_size = tile_size
+        self.time_span = time_span
         self.tiles = self.initialize_tiles()
+        print(len(self.tiles))
 
     def initialize_tiles(self):
         num_of_cols = ceil(abs(self.bounds.minlat - self.bounds.maxlat)
@@ -44,15 +53,22 @@ class ScoreBoard:
                     self.bounds.minlon + (self.tile_size * col) + self.tile_size)),
             self)
 
-
-TimeSpan = namedtuple("TimeSpan", ("begin", "end"))
-
+    @property
+    def avg_dev_factors_array(self):
+        new_array = []
+        for row in self.tiles:
+            new_row = []
+            for col in row:
+                new_row.append(float(col))
+            new_array.append(new_row)
+        return new_array
 
 class Tile:
     def __init__(self, bounds, parentboard):
         self.bounds = bounds
         self.parentboard = parentboard
         self.area_name = self.parentboard.area.name
+        self.paths = self.fetch_paths_from_db(self.parentboard.time_span)
 
     def fetch_paths_from_db(self, time_span):
         paths = []
@@ -62,9 +78,6 @@ class Tile:
         return paths
 
     def fetch_paths_from_table(self, table_name):
-        test_query = """SELECT "path" FROM {} WHERE
-                        ("start"[0] > 0);""".format(table_name)
-        test_query2 = """SELECT "start"[2] FROM {}""".format(table_name)
         query = """SELECT "path" FROM {} WHERE
                    ("start"[1] > {} AND
                     "start"[1] < {} AND
@@ -75,7 +88,7 @@ class Tile:
                     "end"[1] < {} AND
                     "end"[2] > {} AND
                     "end"[2] < {});
-                   """.format(table_name,
+                   """.format(table_name.lower(),
                               self.bounds.minlon,
                               self.bounds.maxlon,
                               self.bounds.minlat,
@@ -100,3 +113,19 @@ class Tile:
         time_of_table = datetime.strptime(time_portion, "%Y%m%d%H%M%S")
         return time_span.begin < time_of_table < time_span.end
 
+    @property
+    def avg_dev_factor(self):
+        dev_factors = []
+        for path in self.paths:
+            try:
+                linestring = LineString(path)
+                straightline = LineString((path[0], path[-1]))
+                dev_factors.append(linestring.length / straightline.length)
+            except IndexError:
+                continue
+        if len(dev_factors) == 0:
+            return 0
+        return sum(dev_factors) / len(dev_factors)
+
+    def __float__(self):
+        return float(self.avg_dev_factor * 20)
