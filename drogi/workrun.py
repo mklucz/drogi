@@ -12,9 +12,10 @@ from .destination_chooser import DestinationChooserAid
         
 
 class WorkRun:
-    """Runs a set of simulations"""
     def __init__(self,
                  area,
+                 from_file=False,
+                 osm_file=None,
                  num_of_trips=1,
                  origin_choice="random",
                  destination_choice="random",
@@ -24,8 +25,8 @@ class WorkRun:
                  db_user=None,
                  debug=True):
         """
-        Top level class that conducts the simulations by getting the data, 
-        turning it into a pathfind-able form, traversing it repeatedly and 
+        Top level class that conducts the simulations by getting the data,
+        turning it into a pathfind-able form, traversing it repeatedly and
         saving the paths in a postgres database.
         """
         self.area = area
@@ -37,13 +38,17 @@ class WorkRun:
             except (KeyError, TypeError):
                 raise AttributeError(
                     "area must be a 4-tuple or a BOUNDS_DICT key")
+        self.from_file = from_file
+        self.osm_file = osm_file
         self.num_of_trips = num_of_trips
         self.origin_choice = origin_choice
         self.destination_choice = destination_choice
         self.allowed_means_of_transport = allowed_means_of_transport
         self.max_trip_radius = max_trip_radius
         self.debug = debug
-        self.way_map = WayMap(self.area)
+        self.way_map = WayMap(self.area,
+                              from_file=self.from_file,
+                              osm_file=self.osm_file)
         self.list_of_trips = []
         self.points_list = list(self.way_map.graph)
         self.dest_chooser_aid = self.create_destination_chooser_aid()
@@ -62,6 +67,7 @@ class WorkRun:
             self.feed_db = False
 
         self.run_trips()
+    """Runs a set of simulations"""
 
     def __enter__(self):
         return self

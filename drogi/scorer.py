@@ -15,7 +15,7 @@ YEAR_2018 = TimeSpan(begin=datetime.strptime("20180101", "%Y%m%d"),
 
 
 class Scorer:
-    def __init__(self, area, db_name, db_user, tile_size=0.001):
+    def __init__(self, area, db_name, db_user, tile_size=0.0001):
         self.area = area
         self.bounds = self.area.bounds
         self.db_name = db_name
@@ -28,14 +28,13 @@ class Scorer:
 
 
 class ScoreBoard:
-    def __init__(self, area, db_conn, tile_size=0.001, time_span=YEAR_2018):
+    def __init__(self, area, db_conn, tile_size=0.0001, time_span=YEAR_2018):
         self.area = area
         self.bounds = self.area.bounds
         self.db_conn = db_conn
         self.tile_size = tile_size
         self.time_span = time_span
         self.tiles = self.initialize_tiles()
-        print(len(self.tiles))
 
     def initialize_tiles(self):
         num_of_cols = ceil(abs(self.bounds.minlat - self.bounds.maxlat)
@@ -125,7 +124,7 @@ class Tile:
                 continue
         if len(dev_factors) == 0:
             return 0
-        return sum(dev_factors) / len(dev_factors)
+        return (1 / (sum(dev_factors) / len(dev_factors))) * 255
 
     def __float__(self):
-        return float(self.avg_dev_factor * 20)
+        return float(self.avg_dev_factor)

@@ -12,21 +12,27 @@ class WayMap:
     """Contains GIS-type data describing physical layout of ways in a particular
     area."""
 
-    def __init__(self, area):
+    def __init__(self, area, from_file=False, osm_file=None):
         """
         Args:
             area(str): geographical area to be fetched and turned into a map
         """
         self.area = area
+        self.from_file = from_file
+        self.osm_file = osm_file
         self.bounds_to_fetch = BOUNDS_DICT[area]
         self.minlat = self.bounds_to_fetch[0]
         self.minlon = self.bounds_to_fetch[1]
         self.maxlat = self.bounds_to_fetch[2]
         self.maxlon = self.bounds_to_fetch[3]
-        self.filename_to_use = None
-        self.oldfile_name = None
         self.extracts_path = os.getcwd() + '/extracts/'
-        self.check_for_cached_extract()
+
+        if from_file:
+            self.filename_to_use = os.getcwd() + self.osm_file
+        else:
+            self.filename_to_use = None
+            self.oldfile_name = None
+            self.check_for_cached_extract()
 
         if self.filename_to_use is None:
             if self.oldfile_name:
@@ -40,9 +46,10 @@ class WayMap:
             response = api.get(map_query, responseformat="xml")
             with open(self.extracts_path + self.filename_to_use, "w") as f:
                 f.write(response)
+            self.filename_to_use = self.extracts_path + self.filename_to_use
 
-        self.handler = OSMHandler(self.extracts_path + self.filename_to_use)
-        self.handler.apply_file(self.extracts_path + self.filename_to_use,
+        self.handler = OSMHandler(self.filename_to_use)
+        self.handler.apply_file(self.filename_to_use,
                                 locations=True)
 
         self.way_list = self.handler.way_list
