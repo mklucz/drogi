@@ -15,7 +15,7 @@ YEAR_2018 = TimeSpan(begin=datetime.strptime("20180101", "%Y%m%d"),
 
 
 class Scorer:
-    def __init__(self, area, db_name, db_user, tile_size=0.0001):
+    def __init__(self, area, db_name, db_user, tile_size=0.01):
         self.area = area
         self.bounds = self.area.bounds
         self.db_name = db_name
@@ -28,7 +28,7 @@ class Scorer:
 
 
 class ScoreBoard:
-    def __init__(self, area, db_conn, tile_size=0.0001, time_span=YEAR_2018):
+    def __init__(self, area, db_conn, tile_size=0.01, time_span=YEAR_2018):
         self.area = area
         self.bounds = self.area.bounds
         self.db_conn = db_conn
@@ -37,9 +37,9 @@ class ScoreBoard:
         self.tiles = self.initialize_tiles()
 
     def initialize_tiles(self):
-        num_of_cols = ceil(abs(self.bounds.minlat - self.bounds.maxlat)
+        num_of_rows = ceil(abs(self.bounds.minlat - self.bounds.maxlat)
                            / self.tile_size)
-        num_of_rows = ceil(abs(self.bounds.minlon - self.bounds.maxlon)
+        num_of_cols = ceil(abs(self.bounds.minlon - self.bounds.maxlon)
                            / self.tile_size)
         return [[self.make_tile(col, row) for col in range(num_of_cols)]
                 for row in range(num_of_rows)]
@@ -62,6 +62,7 @@ class ScoreBoard:
             new_array.append(new_row)
         return new_array
 
+
 class Tile:
     def __init__(self, bounds, parentboard):
         self.bounds = bounds
@@ -77,7 +78,7 @@ class Tile:
         return paths
 
     def fetch_paths_from_table(self, table_name):
-        query = """SELECT "path" FROM {} WHERE
+        query = """SELECT ("path", "length", "straightline_length") FROM {} WHERE
                    ("start"[1] > {} AND
                     "start"[1] < {} AND
                     "start"[2] > {} AND
@@ -98,7 +99,7 @@ class Tile:
                               self.bounds.maxlat)
         curr = self.parentboard.db_conn.cursor()
         curr.execute(query)
-        return [e[0] for e in curr.fetchall()]
+        return [eval(e[0]) for e in curr.fetchall()]
 
     def fetch_table_names_for_area(self):
         query = """SELECT table_name FROM information_schema.tables
@@ -116,12 +117,11 @@ class Tile:
     def avg_dev_factor(self):
         dev_factors = []
         for path in self.paths:
-            try:
-                linestring = LineString(path)
-                straightline = LineString((path[0], path[-1]))
-                dev_factors.append(linestring.length / straightline.length)
-            except IndexError:
-                continue
+            if len(path[0]) > 0:
+                try:
+                    dev_factors.append(float(path[1]) / float(path[2]))
+                except IndexError:
+                    continue
         if len(dev_factors) == 0:
             return 0
         return (1 / (sum(dev_factors) / len(dev_factors))) * 255

@@ -33,7 +33,6 @@ class WayMap:
             self.filename_to_use = None
             self.oldfile_name = None
             self.check_for_cached_extract()
-
         if self.filename_to_use is None:
             if self.oldfile_name:
                 os.remove(self.extracts_path + self.oldfile_name)
@@ -44,10 +43,11 @@ class WayMap:
             map_query = overpass.MapQuery(self.minlat, self.minlon,
                                           self.maxlat, self.maxlon)
             response = api.get(map_query, responseformat="xml")
-            with open(self.extracts_path + self.filename_to_use, "w") as f:
-                f.write(response)
             self.filename_to_use = self.extracts_path + self.filename_to_use
-
+            with open(self.filename_to_use, "w") as f:
+                f.write(response)
+        else:
+            self.filename_to_use = self.extracts_path + self.filename_to_use
         self.handler = OSMHandler(self.filename_to_use)
         self.handler.apply_file(self.filename_to_use,
                                 locations=True)

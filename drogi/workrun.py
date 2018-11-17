@@ -90,7 +90,9 @@ class WorkRun:
         creating_query = ("""CREATE TABLE %s (id serial NOT NULL PRIMARY KEY, 
                                              "start" numeric ARRAY[2],
                                              "end" numeric ARRAY[2],
-                                             "path" json
+                                             "path" json,
+                                             "length" numeric,
+                                             "straightline_length" numeric
                                              );""")
         db_connection.cursor().execute(creating_query % self.table_name)
         db_connection.commit()
@@ -113,14 +115,16 @@ class WorkRun:
                 self.insert_trip_into_db(new_trip, self.db_connection)
 
     def insert_trip_into_db(self, trip, db_connection):
-        inserting_query = """INSERT INTO %s(start, "end", "path")
-                           VALUES ('%s', '%s', '%s');"""
+        inserting_query = """INSERT INTO %s(start, "end", "path", "length", "straightline_length")
+                           VALUES ('%s', '%s', '%s', '%s', '%s');"""
         db_connection.cursor().execute(
                     inserting_query %
                     (self.table_name,
                      str(list(trip.start)).replace('[', '{').replace(']', '}'),
                      str(list(trip.end)).replace('[', '{').replace(']', '}'),
-                     json.dumps(trip.path.list_of_nodes)))
+                     json.dumps(trip.path.list_of_nodes),
+                     trip.path.linestring.length,
+                     trip.path.straightline_length))
         db_connection.commit()
 
 
