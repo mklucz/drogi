@@ -12,7 +12,7 @@ class WayMap:
     """Contains GIS-type data describing physical layout of ways in a particular
     area."""
 
-    def __init__(self, area, from_file=False, osm_file=None):
+    def __init__(self, area, cache_extracts=True, from_file=False, osm_file=None):
         """
         Args:
             area(str): geographical area to be fetched and turned into a map
@@ -26,9 +26,8 @@ class WayMap:
         self.maxlat = self.bounds_to_fetch[2]
         self.maxlon = self.bounds_to_fetch[3]
         self.extracts_path = os.getcwd() + '/extracts/'
-
-        if from_file:
-            self.filename_to_use = os.getcwd() + self.osm_file
+        if from_file and not cache_extracts:
+            self.filename_to_use = self.osm_file
         else:
             self.filename_to_use = None
             self.oldfile_name = None
@@ -46,7 +45,7 @@ class WayMap:
             self.filename_to_use = self.extracts_path + self.filename_to_use
             with open(self.filename_to_use, "w") as f:
                 f.write(response)
-        else:
+        elif cache_extracts:
             self.filename_to_use = self.extracts_path + self.filename_to_use
         self.handler = OSMHandler(self.filename_to_use)
         self.handler.apply_file(self.filename_to_use,

@@ -14,6 +14,7 @@ from .destination_chooser import DestinationChooserAid
 class WorkRun:
     def __init__(self,
                  area,
+                 cache_extracts=True,
                  from_file=False,
                  osm_file=None,
                  num_of_trips=1,
@@ -36,8 +37,9 @@ class WorkRun:
             try:
                 self.bounds = BOUNDS_DICT[self.area]
             except (KeyError, TypeError):
+                print(area)
                 raise AttributeError(
-                    "area must be a 4-tuple or a BOUNDS_DICT key")
+                    "area must be a 4-tuple or a BOUNDS_DICT keybdajsdb")
         self.from_file = from_file
         self.osm_file = osm_file
         self.num_of_trips = num_of_trips
@@ -47,6 +49,7 @@ class WorkRun:
         self.max_trip_radius = max_trip_radius
         self.debug = debug
         self.way_map = WayMap(self.area,
+                              cache_extracts=cache_extracts,
                               from_file=self.from_file,
                               osm_file=self.osm_file)
         self.list_of_trips = []
